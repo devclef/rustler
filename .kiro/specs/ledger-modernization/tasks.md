@@ -119,8 +119,8 @@
   - Update api.ts service with new ledger endpoint
   - _Requirements: 3.1, 4.1, 8.1_
 
-- [ ] 10. Implement running balance calculation utility
-  - [ ] 10.1 Create calculateRunningBalances function
+- [x] 10. Implement running balance calculation utility
+  - [x] 10.1 Create calculateRunningBalances function
     - Accept array of transactions and current account balance
     - Sort transactions by date (newest first)
     - Calculate running balance for each transaction working backwards
