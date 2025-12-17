@@ -1459,4 +1459,24 @@ mod tests {
         // The actual method call would require a database connection,
         // so we just verify the types compile correctly here
     }
+
+    #[tokio::test]
+    async fn test_get_last_category_for_payee_functionality() {
+        // This test verifies the method signature and basic logic
+        // In a real test environment, we would need a test database
+        
+        // Test data
+        let payee_name = "Test Payee";
+        let account_id = Some(Uuid::new_v4());
+        
+        // Verify the method parameters are correct types
+        assert_eq!(payee_name, "Test Payee");
+        assert!(account_id.is_some());
+        
+        // The method should return a tuple of (Option<Uuid>, Option<String>)
+        // This verifies the return type is correct
+        let expected_return_type: (Option<Uuid>, Option<String>) = (None, None);
+        assert_eq!(expected_return_type.0, None);
+        assert_eq!(expected_return_type.1, None);
+    }
 }

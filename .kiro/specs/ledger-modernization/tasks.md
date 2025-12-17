@@ -85,7 +85,7 @@
   - **Property 10: Payee autocomplete suggests existing entities**
   - **Validates: Requirements 3.5**
 
-- [ ] 6. Implement category auto-fill API
+- [x] 6. Implement category auto-fill API
   - Create GET `/api/payees/:name/last-category` endpoint
   - Query most recent transaction with matching payee (source or destination)
   - Return category_id and category name from that transaction
