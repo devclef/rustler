@@ -100,6 +100,17 @@ impl TransactionRuleService {
         self.transaction_service.get_account_transactions(account_id, limit, offset).await
     }
 
+    /// Get transactions for a specific account with search support (pass-through to TransactionService)
+    pub async fn get_account_ledger_transactions(
+        &self,
+        account_id: Uuid,
+        search: Option<&str>,
+        limit: Option<i64>,
+        offset: Option<i64>
+    ) -> Result<Vec<Transaction>, sqlx::Error> {
+        self.transaction_service.get_account_ledger_transactions(account_id, search, limit, offset).await
+    }
+
     /// Get spending by category (pass-through to TransactionService)
     pub async fn get_spending_by_category(
         &self,

@@ -51,15 +51,15 @@
   - **Property 29: Cleared status cycles through states**
   - **Validates: Requirements 8.2**
 
-- [ ] 4. Enhance ledger API endpoint
-  - [ ] 4.1 Modify GET `/api/accounts/:id/ledger` endpoint
+- [x] 4. Enhance ledger API endpoint
+  - [x] 4.1 Modify GET `/api/accounts/:id/ledger` endpoint
     - Add pagination parameters (page, limit)
     - Add search parameter for filtering
     - Return transactions with computed `isTransfer` field
     - Include `currentBalance` and `clearedBalance` in response
     - _Requirements: 5.5, 8.5, 10.2, 11.1_
 
-  - [ ] 4.2 Add transaction perspective transformation
+  - [x] 4.2 Add transaction perspective transformation
     - Compute payee field based on account perspective (show other party)
     - Compute inflow/outflow based on transaction direction
     - Mark transfers between tracked accounts with `isTransfer: true`

@@ -34,7 +34,7 @@ pub fn create_router(
     firefly_import_enabled: bool,
 ) -> Router {
     let mut router = Router::new()
-        .merge(accounts::router(account_service))
+        .merge(accounts::router(account_service, transaction_service.clone()))
         .merge(transactions::router(transaction_rule_service.clone()))
         .merge(categories::router(category_service))
         .merge(category_groups::router(category_group_service))

@@ -343,6 +343,68 @@ impl TransactionService {
             .await
     }
 
+    /// Get transactions for a specific account with search and pagination support
+    pub async fn get_account_ledger_transactions(
+        &self,
+        account_id: Uuid,
+        search: Option<&str>,
+        limit: Option<i64>,
+        offset: Option<i64>
+    ) -> Result<Vec<Transaction>, sqlx::Error> {
+        // Build the base query
+        let mut query = String::from(
+            r#"
+            SELECT t.* FROM transactions t
+            LEFT JOIN accounts src ON t.source_account_id = src.id
+            LEFT JOIN accounts dst ON t.destination_account_id = dst.id
+            LEFT JOIN categories c ON t.category_id = c.id
+            WHERE (t.source_account_id = $1 OR t.destination_account_id = $1)
+            "#
+        );
+
+        // Add search filter if provided
+        let has_search = search.is_some() && !search.unwrap_or("").trim().is_empty();
+        if has_search {
+            query.push_str(
+                r#" AND (
+                    t.description ILIKE $2
+                    OR t.category ILIKE $2
+                    OR COALESCE(c.name, '') ILIKE $2
+                    OR COALESCE(t.destination_name, '') ILIKE $2
+                    OR COALESCE(src.name, '') ILIKE $2
+                    OR COALESCE(dst.name, '') ILIKE $2
+                    OR CAST(t.amount AS TEXT) ILIKE $2
+                )"#
+            );
+        }
+
+        query.push_str(" ORDER BY t.transaction_date DESC");
+
+        // Add pagination
+        if let Some(limit_val) = limit {
+            query.push_str(&format!(" LIMIT {}", limit_val));
+        }
+
+        if let Some(offset_val) = offset {
+            query.push_str(&format!(" OFFSET {}", offset_val));
+        }
+
+        // Build and execute the query
+        if has_search {
+            let search_pattern = format!("%{}%", search.unwrap().trim());
+            sqlx::query_as::<_, Transaction>(&query)
+                .bind(account_id)
+                .bind(&search_pattern)
+                .fetch_all(&self.db)
+                .await
+        } else {
+            sqlx::query_as::<_, Transaction>(&query)
+                .bind(account_id)
+                .fetch_all(&self.db)
+                .await
+        }
+    }
+
     /// Get a transaction by ID
     pub async fn get_transaction(&self, id: Uuid) -> Result<Option<Transaction>, sqlx::Error> {
         sqlx::query_as::<_, Transaction>("SELECT * FROM transactions WHERE id = $1")
