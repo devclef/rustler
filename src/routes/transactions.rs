@@ -10,7 +10,7 @@ use uuid::Uuid;
 use std::sync::Arc;
 use chrono::Utc;
 
-use crate::models::{Transaction, CreateTransactionRequest, UpdateTransactionRequest, ClearedStatus};
+use crate::models::{Transaction, CreateTransactionRequest, UpdateTransactionRequest, ClearedStatus, BulkUpdateTransactionRequest, BulkUpdateResponse};
 use crate::services::TransactionRuleService;
 
 pub fn router(transaction_service: Arc<TransactionRuleService>) -> Router {
@@ -23,6 +23,7 @@ pub fn router(transaction_service: Arc<TransactionRuleService>) -> Router {
         .route("/transactions/{id}", put(update_transaction))
         .route("/transactions/{id}", delete(delete_transaction))
         .route("/transactions/{id}/cleared-status", patch(update_cleared_status))
+        .route("/transactions/bulk-update", post(bulk_update_transactions))
         .route("/accounts/{source_account_id}/transactions", get(get_account_transactions))
         .route("/accounts/{source_account_id}/import-csv", post(import_csv_transactions))
         .with_state(transaction_service)
@@ -247,6 +248,31 @@ async fn update_cleared_status(
         Ok(None) => Err(StatusCode::NOT_FOUND),
         Err(err) => {
             eprintln!("Error updating transaction cleared status: {:?}", err);
+            Err(StatusCode::INTERNAL_SERVER_ERROR)
+        }
+    }
+}
+
+// Handler to bulk update multiple transactions
+async fn bulk_update_transactions(
+    State(state): State<Arc<TransactionRuleService>>,
+    Json(payload): Json<BulkUpdateTransactionRequest>,
+) -> Result<Json<BulkUpdateResponse>, StatusCode> {
+    // Validate that we have transaction IDs to update
+    if payload.transaction_ids.is_empty() {
+        return Err(StatusCode::BAD_REQUEST);
+    }
+
+    // Call the transaction service to perform bulk update
+    match state.bulk_update_transactions(payload.transaction_ids, payload.updates).await {
+        Ok((updated_count, failed_ids)) => {
+            Ok(Json(BulkUpdateResponse {
+                updated: updated_count,
+                failed: failed_ids,
+            }))
+        }
+        Err(err) => {
+            eprintln!("Error performing bulk update: {:?}", err);
             Err(StatusCode::INTERNAL_SERVER_ERROR)
         }
     }

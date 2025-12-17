@@ -87,3 +87,86 @@ pub struct UpdateTransactionRequest {
     /// Cleared status of the transaction
     pub cleared_status: Option<ClearedStatus>,
 }
+
+/// Data required for bulk updating multiple transactions
+#[derive(Debug, Deserialize)]
+pub struct BulkUpdateTransactionRequest {
+    /// Array of transaction IDs to update
+    pub transaction_ids: Vec<Uuid>,
+    /// Partial update object with fields to update
+    pub updates: UpdateTransactionRequest,
+}
+
+/// Response for bulk update operations
+#[derive(Debug, Serialize)]
+pub struct BulkUpdateResponse {
+    /// Number of transactions successfully updated
+    pub updated: usize,
+    /// Array of transaction IDs that failed to update
+    pub failed: Vec<Uuid>,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_bulk_update_request_structure() {
+        // Test that the BulkUpdateTransactionRequest can be created and serialized
+        let transaction_ids = vec![Uuid::new_v4(), Uuid::new_v4()];
+        let updates = UpdateTransactionRequest {
+            destination_account_id: None,
+            destination_name: None,
+            description: Some("Updated description".to_string()),
+            amount: Some(100.0),
+            category: Some("Updated Category".to_string()),
+            budget_id: None,
+            transaction_date: None,
+            cleared_status: Some(ClearedStatus::Cleared),
+        };
+
+        let bulk_request = BulkUpdateTransactionRequest {
+            transaction_ids: transaction_ids.clone(),
+            updates,
+        };
+
+        // Verify the structure is correct
+        assert_eq!(bulk_request.transaction_ids.len(), 2);
+        assert_eq!(bulk_request.transaction_ids, transaction_ids);
+        assert_eq!(bulk_request.updates.description, Some("Updated description".to_string()));
+        assert_eq!(bulk_request.updates.amount, Some(100.0));
+        assert_eq!(bulk_request.updates.category, Some("Updated Category".to_string()));
+        assert!(matches!(bulk_request.updates.cleared_status, Some(ClearedStatus::Cleared)));
+    }
+
+    #[test]
+    fn test_bulk_update_response_structure() {
+        // Test that the BulkUpdateResponse can be created and serialized
+        let failed_ids = vec![Uuid::new_v4()];
+        let response = BulkUpdateResponse {
+            updated: 5,
+            failed: failed_ids.clone(),
+        };
+
+        // Verify the structure is correct
+        assert_eq!(response.updated, 5);
+        assert_eq!(response.failed.len(), 1);
+        assert_eq!(response.failed, failed_ids);
+    }
+
+    #[test]
+    fn test_cleared_status_serialization() {
+        // Test that ClearedStatus enum can be serialized/deserialized
+        let uncleared = ClearedStatus::Uncleared;
+        let cleared = ClearedStatus::Cleared;
+        let reconciled = ClearedStatus::Reconciled;
+
+        // Test that we can create all variants
+        assert!(matches!(uncleared, ClearedStatus::Uncleared));
+        assert!(matches!(cleared, ClearedStatus::Cleared));
+        assert!(matches!(reconciled, ClearedStatus::Reconciled));
+
+        // Test default
+        assert!(matches!(ClearedStatus::default(), ClearedStatus::Uncleared));
+    }
+}

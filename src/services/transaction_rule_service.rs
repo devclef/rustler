@@ -133,4 +133,9 @@ impl TransactionRuleService {
     pub async fn update_cleared_status(&self, id: Uuid, new_status: crate::models::ClearedStatus) -> Result<Option<Transaction>, sqlx::Error> {
         self.transaction_service.update_cleared_status(id, new_status).await
     }
+
+    /// Bulk update multiple transactions (pass-through to TransactionService)
+    pub async fn bulk_update_transactions(&self, transaction_ids: Vec<Uuid>, updates: UpdateTransactionRequest) -> Result<(usize, Vec<Uuid>), sqlx::Error> {
+        self.transaction_service.bulk_update_transactions(transaction_ids, updates).await
+    }
 }

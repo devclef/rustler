@@ -96,7 +96,7 @@
   - **Property 19: Payee selection auto-fills category**
   - **Validates: Requirements 6.2**
 
-- [ ] 7. Implement bulk update API
+- [x] 7. Implement bulk update API
   - Create POST `/api/transactions/bulk-update` endpoint
   - Accept array of transaction IDs and partial update object
   - Update all specified transactions in a database transaction

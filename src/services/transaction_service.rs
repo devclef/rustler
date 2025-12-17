@@ -1260,6 +1260,511 @@ impl TransactionService {
         }
     }
 
+    /// Bulk update multiple transactions with the same changes
+    pub async fn bulk_update_transactions(&self, transaction_ids: Vec<Uuid>, updates: UpdateTransactionRequest) -> Result<(usize, Vec<Uuid>), sqlx::Error> {
+        let mut updated_count = 0;
+        let mut failed_ids = Vec::new();
+
+        // Start a database transaction for atomicity
+        let mut tx = self.db.begin().await?;
+
+        for transaction_id in transaction_ids {
+            // Get the original transaction to reverse its balance effects
+            let original_transaction = sqlx::query_as::<_, Transaction>("SELECT * FROM transactions WHERE id = $1")
+                .bind(transaction_id)
+                .fetch_optional(&mut *tx)
+                .await?;
+
+            if let Some(original) = original_transaction {
+                // Reverse the original transaction's balance effects
+                if let Err(_) = self.reverse_transaction_balance_effects_in_tx(&mut tx, &original, chrono::Utc::now()).await {
+                    failed_ids.push(transaction_id);
+                    continue;
+                }
+
+                // Build the update query dynamically based on which fields are provided
+                let mut query = String::from("UPDATE transactions SET updated_at = $1");
+                let mut param_count = 2;
+                let mut bind_values: Vec<Box<dyn sqlx::Encode<'_, Postgres> + Send + Sync>> = vec![];
+                
+                let now = chrono::Utc::now();
+                
+                // Track the new values (use original values if not updated)
+                let new_amount = updates.amount.unwrap_or(original.amount);
+                let new_source_account_id = original.source_account_id; // Source account can't be changed
+                let mut new_destination_account_id = original.destination_account_id;
+                let new_cleared_status = updates.cleared_status.as_ref().unwrap_or(&original.cleared_status);
+
+                if let Some(amount) = updates.amount {
+                    query.push_str(&format!(", amount = ${}", param_count));
+                    param_count += 1;
+                }
+
+                if let Some(ref description) = updates.description {
+                    query.push_str(&format!(", description = ${}", param_count));
+                    param_count += 1;
+                }
+
+                if let Some(ref category_name) = updates.category {
+                    // Resolve category and set both legacy category name and stable category_id
+                    if let Ok(cat) = self.category_service.find_or_create_category(category_name).await {
+                        query.push_str(&format!(", category = ${}, category_id = ${}", param_count, param_count + 1));
+                        param_count += 2;
+                    } else {
+                        // Fall back to just updating the legacy string if resolution fails
+                        query.push_str(&format!(", category = ${}", param_count));
+                        param_count += 1;
+                    }
+                }
+
+                if let Some(budget_id) = updates.budget_id {
+                    query.push_str(&format!(", budget_id = ${}", param_count));
+                    param_count += 1;
+                }
+
+                if let Some(transaction_date) = updates.transaction_date {
+                    query.push_str(&format!(", transaction_date = ${}", param_count));
+                    param_count += 1;
+                }
+
+                if let Some(ref cleared_status) = updates.cleared_status {
+                    query.push_str(&format!(", cleared_status = ${}", param_count));
+                    param_count += 1;
+                }
+
+                // Handle destination account updates
+                if let Some(destination_account_id) = updates.destination_account_id {
+                    query.push_str(&format!(", destination_account_id = ${}", param_count));
+                    new_destination_account_id = destination_account_id;
+                    param_count += 1;
+
+                    // Look up the destination account name and update it
+                    if updates.destination_name.is_none() {
+                        let dest_account = sqlx::query!(
+                            "SELECT name FROM accounts WHERE id = $1",
+                            destination_account_id
+                        )
+                        .fetch_optional(&mut *tx)
+                        .await?;
+
+                        if let Some(account) = dest_account {
+                            query.push_str(&format!(", destination_name = ${}", param_count));
+                            param_count += 1;
+                        }
+                    }
+                } else if let Some(ref dest_name) = updates.destination_name {
+                    // If destination_name is provided but not destination_account_id,
+                    // check if there's an existing account that matches the destination name
+                    let existing_account = sqlx::query!(
+                        "SELECT id FROM accounts WHERE name = $1",
+                        dest_name
+                    )
+                    .fetch_optional(&mut *tx)
+                    .await?;
+
+                    if let Some(record) = existing_account {
+                        // Use the existing account
+                        query.push_str(&format!(", destination_account_id = ${}", param_count));
+                        new_destination_account_id = record.id;
+                        param_count += 1;
+                    } else {
+                        // Create a new external account
+                        let new_account_id = Uuid::new_v4();
+                        sqlx::query(
+                            r#"
+                            INSERT INTO accounts (id, name, account_type, balance, cleared_balance, currency, created_at, updated_at)
+                            VALUES ($1, $2, 'External', 0.00, 0.00, 'USD', $3, $4)
+                            "#,
+                        )
+                        .bind(new_account_id)
+                        .bind(dest_name)
+                        .bind(now)
+                        .bind(now)
+                        .execute(&mut *tx)
+                        .await?;
+
+                        query.push_str(&format!(", destination_account_id = ${}", param_count));
+                        new_destination_account_id = new_account_id;
+                        param_count += 1;
+                    }
+
+                    // Also update the destination_name field in the transaction
+                    query.push_str(&format!(", destination_name = ${}", param_count));
+                    param_count += 1;
+                }
+
+                query.push_str(&format!(" WHERE id = ${}", param_count));
+
+                // Execute the update using raw SQL with manual parameter binding
+                let mut sql_query = sqlx::query(&query)
+                    .bind(now)
+                    .bind(transaction_id);
+
+                // Bind parameters in the same order they were added to the query
+                if let Some(amount) = updates.amount {
+                    sql_query = sql_query.bind(amount);
+                }
+
+                if let Some(ref description) = updates.description {
+                    sql_query = sql_query.bind(description);
+                }
+
+                if let Some(ref category_name) = updates.category {
+                    if let Ok(cat) = self.category_service.find_or_create_category(category_name).await {
+                        sql_query = sql_query.bind(category_name).bind(cat.id);
+                    } else {
+                        sql_query = sql_query.bind(category_name);
+                    }
+                }
+
+                if let Some(budget_id) = updates.budget_id {
+                    sql_query = sql_query.bind(budget_id);
+                }
+
+                if let Some(transaction_date) = updates.transaction_date {
+                    sql_query = sql_query.bind(transaction_date);
+                }
+
+                if let Some(ref cleared_status) = updates.cleared_status {
+                    sql_query = sql_query.bind(cleared_status);
+                }
+
+                if let Some(destination_account_id) = updates.destination_account_id {
+                    sql_query = sql_query.bind(destination_account_id);
+
+                    // Add destination name if we looked it up
+                    if updates.destination_name.is_none() {
+                        let dest_account = sqlx::query!(
+                            "SELECT name FROM accounts WHERE id = $1",
+                            destination_account_id
+                        )
+                        .fetch_optional(&mut *tx)
+                        .await?;
+
+                        if let Some(account) = dest_account {
+                            sql_query = sql_query.bind(account.name);
+                        }
+                    }
+                } else if let Some(ref dest_name) = updates.destination_name {
+                    // Check if we created a new account or found existing one
+                    let existing_account = sqlx::query!(
+                        "SELECT id FROM accounts WHERE name = $1",
+                        dest_name
+                    )
+                    .fetch_optional(&mut *tx)
+                    .await?;
+
+                    if let Some(record) = existing_account {
+                        sql_query = sql_query.bind(record.id);
+                    } else {
+                        // We created a new account above, bind its ID
+                        let new_account_id = Uuid::new_v4();
+                        sql_query = sql_query.bind(new_account_id);
+                    }
+                    sql_query = sql_query.bind(dest_name);
+                }
+
+                // Execute the update
+                match sql_query.execute(&mut *tx).await {
+                    Ok(result) => {
+                        if result.rows_affected() > 0 {
+                            // Apply the new transaction's balance effects
+                            if let Err(_) = self.apply_transaction_balance_effects_in_tx(&mut tx, new_source_account_id, new_destination_account_id, new_amount, new_cleared_status, now).await {
+                                failed_ids.push(transaction_id);
+                            } else {
+                                updated_count += 1;
+                            }
+                        } else {
+                            failed_ids.push(transaction_id);
+                        }
+                    }
+                    Err(_) => {
+                        failed_ids.push(transaction_id);
+                    }
+                }
+            } else {
+                // Transaction not found
+                failed_ids.push(transaction_id);
+            }
+        }
+
+        // Commit the transaction
+        tx.commit().await?;
+
+        Ok((updated_count, failed_ids))
+    }
+
+    /// Helper method to reverse transaction balance effects within an existing transaction
+    async fn reverse_transaction_balance_effects_in_tx(
+        &self,
+        tx: &mut sqlx::Transaction<'_, Postgres>,
+        transaction: &Transaction,
+        now: DateTime<Utc>
+    ) -> Result<(), sqlx::Error> {
+        let abs_amount = transaction.amount.abs();
+
+        // Reverse regular balance effects
+        if transaction.amount >= 0.0 {
+            // Original was positive: source lost money, destination gained money
+            // Reverse: source gains money back, destination loses money
+            sqlx::query(
+                r#"
+                UPDATE accounts
+                SET balance = balance + $1, updated_at = $2
+                WHERE id = $3
+                "#,
+            )
+            .bind(abs_amount)
+            .bind(now)
+            .bind(transaction.source_account_id)
+            .execute(&mut **tx)
+            .await?;
+
+            sqlx::query(
+                r#"
+                UPDATE accounts
+                SET balance = balance - $1, updated_at = $2
+                WHERE id = $3
+                "#,
+            )
+            .bind(abs_amount)
+            .bind(now)
+            .bind(transaction.destination_account_id)
+            .execute(&mut **tx)
+            .await?;
+        } else {
+            // Original was negative: source gained money, destination lost money
+            // Reverse: source loses money, destination gains money back
+            sqlx::query(
+                r#"
+                UPDATE accounts
+                SET balance = balance - $1, updated_at = $2
+                WHERE id = $3
+                "#,
+            )
+            .bind(abs_amount)
+            .bind(now)
+            .bind(transaction.source_account_id)
+            .execute(&mut **tx)
+            .await?;
+
+            sqlx::query(
+                r#"
+                UPDATE accounts
+                SET balance = balance + $1, updated_at = $2
+                WHERE id = $3
+                "#,
+            )
+            .bind(abs_amount)
+            .bind(now)
+            .bind(transaction.destination_account_id)
+            .execute(&mut **tx)
+            .await?;
+        }
+
+        // Reverse cleared balance effects if transaction was cleared or reconciled
+        if matches!(transaction.cleared_status, ClearedStatus::Cleared | ClearedStatus::Reconciled) {
+            if transaction.amount >= 0.0 {
+                // Original was positive: source cleared balance decreased, destination cleared balance increased
+                // Reverse: source cleared balance increases, destination cleared balance decreases
+                sqlx::query(
+                    r#"
+                    UPDATE accounts
+                    SET cleared_balance = cleared_balance + $1, updated_at = $2
+                    WHERE id = $3
+                    "#,
+                )
+                .bind(abs_amount)
+                .bind(now)
+                .bind(transaction.source_account_id)
+                .execute(&mut **tx)
+                .await?;
+
+                sqlx::query(
+                    r#"
+                    UPDATE accounts
+                    SET cleared_balance = cleared_balance - $1, updated_at = $2
+                    WHERE id = $3
+                    "#,
+                )
+                .bind(abs_amount)
+                .bind(now)
+                .bind(transaction.destination_account_id)
+                .execute(&mut **tx)
+                .await?;
+            } else {
+                // Original was negative: source cleared balance increased, destination cleared balance decreased
+                // Reverse: source cleared balance decreases, destination cleared balance increases
+                sqlx::query(
+                    r#"
+                    UPDATE accounts
+                    SET cleared_balance = cleared_balance - $1, updated_at = $2
+                    WHERE id = $3
+                    "#,
+                )
+                .bind(abs_amount)
+                .bind(now)
+                .bind(transaction.source_account_id)
+                .execute(&mut **tx)
+                .await?;
+
+                sqlx::query(
+                    r#"
+                    UPDATE accounts
+                    SET cleared_balance = cleared_balance + $1, updated_at = $2
+                    WHERE id = $3
+                    "#,
+                )
+                .bind(abs_amount)
+                .bind(now)
+                .bind(transaction.destination_account_id)
+                .execute(&mut **tx)
+                .await?;
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Helper method to apply transaction balance effects within an existing transaction
+    async fn apply_transaction_balance_effects_in_tx(
+        &self,
+        tx: &mut sqlx::Transaction<'_, Postgres>,
+        source_account_id: Uuid,
+        destination_account_id: Uuid,
+        amount: f64,
+        cleared_status: &ClearedStatus,
+        now: DateTime<Utc>
+    ) -> Result<(), sqlx::Error> {
+        let abs_amount = amount.abs();
+
+        // Apply regular balance effects
+        if amount >= 0.0 {
+            // Positive amount: money flows FROM source TO destination
+            // Source account loses money (decrease balance)
+            sqlx::query(
+                r#"
+                UPDATE accounts
+                SET balance = balance - $1, updated_at = $2
+                WHERE id = $3
+                "#,
+            )
+            .bind(abs_amount)
+            .bind(now)
+            .bind(source_account_id)
+            .execute(&mut **tx)
+            .await?;
+
+            // Destination account gains money (increase balance)
+            sqlx::query(
+                r#"
+                UPDATE accounts
+                SET balance = balance + $1, updated_at = $2
+                WHERE id = $3
+                "#,
+            )
+            .bind(abs_amount)
+            .bind(now)
+            .bind(destination_account_id)
+            .execute(&mut **tx)
+            .await?;
+        } else {
+            // Negative amount: money flows FROM destination TO source
+            // Source account gains money (increase balance)
+            sqlx::query(
+                r#"
+                UPDATE accounts
+                SET balance = balance + $1, updated_at = $2
+                WHERE id = $3
+                "#,
+            )
+            .bind(abs_amount)
+            .bind(now)
+            .bind(source_account_id)
+            .execute(&mut **tx)
+            .await?;
+
+            // Destination account loses money (decrease balance)
+            sqlx::query(
+                r#"
+                UPDATE accounts
+                SET balance = balance - $1, updated_at = $2
+                WHERE id = $3
+                "#,
+            )
+            .bind(abs_amount)
+            .bind(now)
+            .bind(destination_account_id)
+            .execute(&mut **tx)
+            .await?;
+        }
+
+        // Apply cleared balance effects if transaction is cleared or reconciled
+        if matches!(cleared_status, ClearedStatus::Cleared | ClearedStatus::Reconciled) {
+            if amount >= 0.0 {
+                // Positive amount: money flows FROM source TO destination
+                // Source account cleared balance decreases
+                sqlx::query(
+                    r#"
+                    UPDATE accounts
+                    SET cleared_balance = cleared_balance - $1, updated_at = $2
+                    WHERE id = $3
+                    "#,
+                )
+                .bind(abs_amount)
+                .bind(now)
+                .bind(source_account_id)
+                .execute(&mut **tx)
+                .await?;
+
+                // Destination account cleared balance increases
+                sqlx::query(
+                    r#"
+                    UPDATE accounts
+                    SET cleared_balance = cleared_balance + $1, updated_at = $2
+                    WHERE id = $3
+                    "#,
+                )
+                .bind(abs_amount)
+                .bind(now)
+                .bind(destination_account_id)
+                .execute(&mut **tx)
+                .await?;
+            } else {
+                // Negative amount: money flows FROM destination TO source
+                // Source account cleared balance increases
+                sqlx::query(
+                    r#"
+                    UPDATE accounts
+                    SET cleared_balance = cleared_balance + $1, updated_at = $2
+                    WHERE id = $3
+                    "#,
+                )
+                .bind(abs_amount)
+                .bind(now)
+                .bind(source_account_id)
+                .execute(&mut **tx)
+                .await?;
+
+                // Destination account cleared balance decreases
+                sqlx::query(
+                    r#"
+                    UPDATE accounts
+                    SET cleared_balance = cleared_balance - $1, updated_at = $2
+                    WHERE id = $3
+                    "#,
+                )
+                .bind(abs_amount)
+                .bind(now)
+                .bind(destination_account_id)
+                .execute(&mut **tx)
+                .await?;
+            }
+        }
+
+        Ok(())
+    }
+
     /// Update the cleared status of a transaction and recalculate cleared balances
     pub async fn update_cleared_status(&self, id: Uuid, new_status: ClearedStatus) -> Result<Option<Transaction>, sqlx::Error> {
         // First, get the current transaction to understand its current state
