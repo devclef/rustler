@@ -13,8 +13,8 @@
   - **Property 42: Transaction creation updates both account balances**
   - **Validates: Requirements 12.2**
 
-- [ ] 2. Implement cleared balance tracking in transaction service
-  - [ ] 2.1 Update transaction creation to calculate cleared balance
+- [x] 2. Implement cleared balance tracking in transaction service
+  - [x] 2.1 Update transaction creation to calculate cleared balance
     - When creating a transaction, if cleared_status is 'cleared' or 'reconciled', update both account cleared balances
     - Maintain double-entry invariant for cleared balances
     - _Requirements: 8.3, 12.2_
@@ -23,7 +23,7 @@
     - **Property 30: Cleared status updates cleared balance**
     - **Validates: Requirements 8.3**
 
-  - [ ] 2.3 Update transaction update to recalculate cleared balances
+  - [x] 2.3 Update transaction update to recalculate cleared balances
     - Reverse original cleared balance effects if transaction was cleared/reconciled
     - Apply new cleared balance effects based on new cleared status
     - _Requirements: 8.3, 12.3_
@@ -32,7 +32,7 @@
     - **Property 43: Transaction update reverses and reapplies balance effects**
     - **Validates: Requirements 12.3**
 
-  - [ ] 2.5 Update transaction deletion to reverse cleared balance effects
+  - [x] 2.5 Update transaction deletion to reverse cleared balance effects
     - When deleting a cleared/reconciled transaction, reverse cleared balance effects
     - _Requirements: 8.3, 12.4_
 

@@ -466,6 +466,7 @@ impl TransactionService {
 
         let abs_amount = req.amount.abs();
 
+        // Update regular balances
         if req.amount >= 0.0 {
             // Positive amount: money flows FROM source TO destination
             // Source account loses money (decrease balance)
@@ -528,6 +529,73 @@ impl TransactionService {
             .execute(&mut *tx)
             .await?;
             if ra2.rows_affected() != 1 { return Err(sqlx::Error::Protocol("Invariant violation: destination account update failed".into())); }
+        }
+
+        // Update cleared balances if transaction is cleared or reconciled
+        if matches!(req.cleared_status, ClearedStatus::Cleared | ClearedStatus::Reconciled) {
+            if req.amount >= 0.0 {
+                // Positive amount: money flows FROM source TO destination
+                // Source account cleared balance decreases
+                let ra3 = sqlx::query(
+                    r#"
+                    UPDATE accounts
+                    SET cleared_balance = cleared_balance - $1, updated_at = $2
+                    WHERE id = $3
+                    "#,
+                )
+                .bind(abs_amount)
+                .bind(now)
+                .bind(req.source_account_id)
+                .execute(&mut *tx)
+                .await?;
+                if ra3.rows_affected() != 1 { return Err(sqlx::Error::Protocol("Invariant violation: source account cleared balance update failed".into())); }
+
+                // Destination account cleared balance increases
+                let ra4 = sqlx::query(
+                    r#"
+                    UPDATE accounts
+                    SET cleared_balance = cleared_balance + $1, updated_at = $2
+                    WHERE id = $3
+                    "#,
+                )
+                .bind(abs_amount)
+                .bind(now)
+                .bind(destination_account_id)
+                .execute(&mut *tx)
+                .await?;
+                if ra4.rows_affected() != 1 { return Err(sqlx::Error::Protocol("Invariant violation: destination account cleared balance update failed".into())); }
+            } else {
+                // Negative amount: money flows FROM destination TO source
+                // Source account cleared balance increases
+                let ra3 = sqlx::query(
+                    r#"
+                    UPDATE accounts
+                    SET cleared_balance = cleared_balance + $1, updated_at = $2
+                    WHERE id = $3
+                    "#,
+                )
+                .bind(abs_amount)
+                .bind(now)
+                .bind(req.source_account_id)
+                .execute(&mut *tx)
+                .await?;
+                if ra3.rows_affected() != 1 { return Err(sqlx::Error::Protocol("Invariant violation: source account cleared balance update failed".into())); }
+
+                // Destination account cleared balance decreases
+                let ra4 = sqlx::query(
+                    r#"
+                    UPDATE accounts
+                    SET cleared_balance = cleared_balance - $1, updated_at = $2
+                    WHERE id = $3
+                    "#,
+                )
+                .bind(abs_amount)
+                .bind(now)
+                .bind(destination_account_id)
+                .execute(&mut *tx)
+                .await?;
+                if ra4.rows_affected() != 1 { return Err(sqlx::Error::Protocol("Invariant violation: destination account cleared balance update failed".into())); }
+            }
         }
 
         // Commit the transaction
@@ -666,7 +734,8 @@ impl TransactionService {
                 .await?;
 
             // Apply the new transaction's effect on account balances
-            self.apply_transaction_balance_effects(&mut tx, new_source_account_id, new_destination_account_id, new_amount, now).await?;
+            let new_cleared_status = req.cleared_status.as_ref().unwrap_or(&original.cleared_status);
+            self.apply_transaction_balance_effects(&mut tx, new_source_account_id, new_destination_account_id, new_amount, new_cleared_status, now).await?;
 
             // Commit the transaction
             tx.commit().await?;
@@ -714,6 +783,7 @@ impl TransactionService {
     ) -> Result<(), sqlx::Error> {
         let abs_amount = transaction.amount.abs();
 
+        // Reverse regular balance effects
         if transaction.amount >= 0.0 {
             // Original was positive: source lost money, destination gained money
             // Reverse: source gains money back, destination loses money
@@ -772,6 +842,67 @@ impl TransactionService {
             .await?;
         }
 
+        // Reverse cleared balance effects if transaction was cleared or reconciled
+        if matches!(transaction.cleared_status, ClearedStatus::Cleared | ClearedStatus::Reconciled) {
+            if transaction.amount >= 0.0 {
+                // Original was positive: source cleared balance decreased, destination cleared balance increased
+                // Reverse: source cleared balance increases, destination cleared balance decreases
+                sqlx::query(
+                    r#"
+                    UPDATE accounts
+                    SET cleared_balance = cleared_balance + $1, updated_at = $2
+                    WHERE id = $3
+                    "#,
+                )
+                .bind(abs_amount)
+                .bind(now)
+                .bind(transaction.source_account_id)
+                .execute(&mut **tx)
+                .await?;
+
+                sqlx::query(
+                    r#"
+                    UPDATE accounts
+                    SET cleared_balance = cleared_balance - $1, updated_at = $2
+                    WHERE id = $3
+                    "#,
+                )
+                .bind(abs_amount)
+                .bind(now)
+                .bind(transaction.destination_account_id)
+                .execute(&mut **tx)
+                .await?;
+            } else {
+                // Original was negative: source cleared balance increased, destination cleared balance decreased
+                // Reverse: source cleared balance decreases, destination cleared balance increases
+                sqlx::query(
+                    r#"
+                    UPDATE accounts
+                    SET cleared_balance = cleared_balance - $1, updated_at = $2
+                    WHERE id = $3
+                    "#,
+                )
+                .bind(abs_amount)
+                .bind(now)
+                .bind(transaction.source_account_id)
+                .execute(&mut **tx)
+                .await?;
+
+                sqlx::query(
+                    r#"
+                    UPDATE accounts
+                    SET cleared_balance = cleared_balance + $1, updated_at = $2
+                    WHERE id = $3
+                    "#,
+                )
+                .bind(abs_amount)
+                .bind(now)
+                .bind(transaction.destination_account_id)
+                .execute(&mut **tx)
+                .await?;
+            }
+        }
+
         Ok(())
     }
 
@@ -782,10 +913,12 @@ impl TransactionService {
         source_account_id: Uuid,
         destination_account_id: Uuid,
         amount: f64,
+        cleared_status: &ClearedStatus,
         now: DateTime<Utc>
     ) -> Result<(), sqlx::Error> {
         let abs_amount = amount.abs();
 
+        // Apply regular balance effects
         if amount >= 0.0 {
             // Positive amount: money flows FROM source TO destination
             // Source account loses money (decrease balance)
@@ -844,6 +977,69 @@ impl TransactionService {
             .bind(destination_account_id)
             .execute(&mut **tx)
             .await?;
+        }
+
+        // Apply cleared balance effects if transaction is cleared or reconciled
+        if matches!(cleared_status, ClearedStatus::Cleared | ClearedStatus::Reconciled) {
+            if amount >= 0.0 {
+                // Positive amount: money flows FROM source TO destination
+                // Source account cleared balance decreases
+                sqlx::query(
+                    r#"
+                    UPDATE accounts
+                    SET cleared_balance = cleared_balance - $1, updated_at = $2
+                    WHERE id = $3
+                    "#,
+                )
+                .bind(abs_amount)
+                .bind(now)
+                .bind(source_account_id)
+                .execute(&mut **tx)
+                .await?;
+
+                // Destination account cleared balance increases
+                sqlx::query(
+                    r#"
+                    UPDATE accounts
+                    SET cleared_balance = cleared_balance + $1, updated_at = $2
+                    WHERE id = $3
+                    "#,
+                )
+                .bind(abs_amount)
+                .bind(now)
+                .bind(destination_account_id)
+                .execute(&mut **tx)
+                .await?;
+            } else {
+                // Negative amount: money flows FROM destination TO source
+                // Source account cleared balance increases
+                sqlx::query(
+                    r#"
+                    UPDATE accounts
+                    SET cleared_balance = cleared_balance + $1, updated_at = $2
+                    WHERE id = $3
+                    "#,
+                )
+                .bind(abs_amount)
+                .bind(now)
+                .bind(source_account_id)
+                .execute(&mut **tx)
+                .await?;
+
+                // Destination account cleared balance decreases
+                sqlx::query(
+                    r#"
+                    UPDATE accounts
+                    SET cleared_balance = cleared_balance - $1, updated_at = $2
+                    WHERE id = $3
+                    "#,
+                )
+                .bind(abs_amount)
+                .bind(now)
+                .bind(destination_account_id)
+                .execute(&mut **tx)
+                .await?;
+            }
         }
 
         Ok(())
