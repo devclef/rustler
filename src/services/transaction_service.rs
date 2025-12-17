@@ -1137,6 +1137,75 @@ impl TransactionService {
             .await
     }
 
+    /// Get unique external payee names from transactions (destination_name field)
+    /// Excludes names that match existing account names
+    pub async fn get_external_payee_names(&self, search_pattern: Option<&str>) -> Result<Vec<String>, sqlx::Error> {
+        let query = if let Some(pattern) = search_pattern {
+            if pattern == "%%" || pattern.trim().is_empty() {
+                // If no search query, get all unique external payee names
+                r#"
+                SELECT DISTINCT destination_name
+                FROM transactions
+                WHERE destination_name IS NOT NULL 
+                  AND destination_name != ''
+                  AND destination_name NOT IN (SELECT name FROM accounts)
+                ORDER BY destination_name
+                LIMIT 50
+                "#
+            } else {
+                // Get matching external payee names
+                r#"
+                SELECT DISTINCT destination_name
+                FROM transactions
+                WHERE destination_name IS NOT NULL 
+                  AND destination_name != ''
+                  AND destination_name NOT IN (SELECT name FROM accounts)
+                  AND destination_name ILIKE $1
+                ORDER BY destination_name
+                LIMIT 50
+                "#
+            }
+        } else {
+            // Default: get all unique external payee names
+            r#"
+            SELECT DISTINCT destination_name
+            FROM transactions
+            WHERE destination_name IS NOT NULL 
+              AND destination_name != ''
+              AND destination_name NOT IN (SELECT name FROM accounts)
+            ORDER BY destination_name
+            LIMIT 50
+            "#
+        };
+
+        let rows = if let Some(pattern) = search_pattern {
+            if pattern == "%%" || pattern.trim().is_empty() {
+                sqlx::query(query)
+                    .fetch_all(&self.db)
+                    .await?
+            } else {
+                sqlx::query(query)
+                    .bind(pattern)
+                    .fetch_all(&self.db)
+                    .await?
+            }
+        } else {
+            sqlx::query(query)
+                .fetch_all(&self.db)
+                .await?
+        };
+
+        let external_payees = rows
+            .into_iter()
+            .filter_map(|row| {
+                let name: Option<String> = row.get("destination_name");
+                name
+            })
+            .collect();
+
+        Ok(external_payees)
+    }
+
     /// Update the cleared status of a transaction and recalculate cleared balances
     pub async fn update_cleared_status(&self, id: Uuid, new_status: ClearedStatus) -> Result<Option<Transaction>, sqlx::Error> {
         // First, get the current transaction to understand its current state

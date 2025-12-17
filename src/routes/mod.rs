@@ -11,6 +11,7 @@ mod rules;
 mod rule_groups;
 mod imports;
 mod settings;
+mod payees;
 
 use axum::{
     Router,
@@ -34,7 +35,7 @@ pub fn create_router(
     firefly_import_enabled: bool,
 ) -> Router {
     let mut router = Router::new()
-        .merge(accounts::router(account_service, transaction_service.clone()))
+        .merge(accounts::router(account_service.clone(), transaction_service.clone()))
         .merge(transactions::router(transaction_rule_service.clone()))
         .merge(categories::router(category_service))
         .merge(category_groups::router(category_group_service))
@@ -45,7 +46,8 @@ pub fn create_router(
         .merge(rules::router(rule_service))
         .merge(rule_groups::router(rule_group_service))
         .merge(settings::router(settings_service))
-        .merge(features::router(firefly_import_enabled));
+        .merge(features::router(firefly_import_enabled))
+        .merge(payees::router(account_service, transaction_service.clone()));
 
     if firefly_import_enabled {
         router = router.merge(imports::router(import_service));

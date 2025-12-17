@@ -74,7 +74,7 @@
     - **Property 12: Inflow displays for money entering account**
     - **Validates: Requirements 4.2, 4.3**
 
-- [ ] 5. Implement payee autocomplete API
+- [x] 5. Implement payee autocomplete API
   - Create GET `/api/payees/autocomplete` endpoint
   - Query accounts table for matching account names
   - Query transactions for unique external payee names (from destination_name)
