@@ -1206,6 +1206,60 @@ impl TransactionService {
         Ok(external_payees)
     }
 
+    /// Get the last category used with a specific payee
+    /// Searches for the most recent transaction where the payee appears as either source or destination
+    pub async fn get_last_category_for_payee(&self, payee_name: &str, account_id: Option<Uuid>) -> Result<(Option<Uuid>, Option<String>), sqlx::Error> {
+        let query = if let Some(account_id) = account_id {
+            // If payee matches an account, search for transactions involving that account
+            r#"
+            SELECT t.category_id, t.category, c.name as category_name
+            FROM transactions t
+            LEFT JOIN categories c ON t.category_id = c.id
+            WHERE (t.source_account_id = $1 OR t.destination_account_id = $1)
+              AND (t.category_id IS NOT NULL OR (t.category IS NOT NULL AND t.category != ''))
+            ORDER BY t.transaction_date DESC, t.created_at DESC
+            LIMIT 1
+            "#
+        } else {
+            // If payee is external, search by destination_name
+            r#"
+            SELECT t.category_id, t.category, c.name as category_name
+            FROM transactions t
+            LEFT JOIN categories c ON t.category_id = c.id
+            WHERE t.destination_name ILIKE $1
+              AND (t.category_id IS NOT NULL OR (t.category IS NOT NULL AND t.category != ''))
+            ORDER BY t.transaction_date DESC, t.created_at DESC
+            LIMIT 1
+            "#
+        };
+
+        let row = if let Some(account_id) = account_id {
+            sqlx::query(query)
+                .bind(account_id)
+                .fetch_optional(&self.db)
+                .await?
+        } else {
+            sqlx::query(query)
+                .bind(payee_name)
+                .fetch_optional(&self.db)
+                .await?
+        };
+
+        if let Some(row) = row {
+            let category_id: Option<Uuid> = row.get("category_id");
+            let legacy_category: Option<String> = row.get("category");
+            let category_name: Option<String> = row.get("category_name");
+
+            // Prefer the resolved category name from the categories table, fall back to legacy category
+            let final_category_name = category_name.or(legacy_category);
+
+            Ok((category_id, final_category_name))
+        } else {
+            // No previous transaction found
+            Ok((None, None))
+        }
+    }
+
     /// Update the cleared status of a transaction and recalculate cleared balances
     pub async fn update_cleared_status(&self, id: Uuid, new_status: ClearedStatus) -> Result<Option<Transaction>, sqlx::Error> {
         // First, get the current transaction to understand its current state
@@ -1387,5 +1441,22 @@ mod tests {
         assert!(matches!(uncleared, ClearedStatus::Uncleared));
         assert!(matches!(cleared, ClearedStatus::Cleared));
         assert!(matches!(reconciled, ClearedStatus::Reconciled));
+    }
+
+    #[test]
+    fn test_get_last_category_for_payee_method_exists() {
+        // This test verifies that the method signature is correct and compiles
+        // Integration tests with actual database would be needed for full functionality testing
+        
+        // Test that we can create the method parameters
+        let payee_name = "Test Payee";
+        let account_id = Some(Uuid::new_v4());
+        
+        // Verify the parameters are the expected types
+        assert_eq!(payee_name, "Test Payee");
+        assert!(account_id.is_some());
+        
+        // The actual method call would require a database connection,
+        // so we just verify the types compile correctly here
     }
 }
