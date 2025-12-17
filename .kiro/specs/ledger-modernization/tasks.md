@@ -40,7 +40,7 @@
     - **Property 44: Transaction deletion reverses balance effects**
     - **Validates: Requirements 12.4**
 
-- [ ] 3. Add cleared status API endpoint
+- [x] 3. Add cleared status API endpoint
   - Create PATCH `/api/transactions/:id/cleared-status` endpoint
   - Validate cleared status transitions (allow any transition for now)
   - Update transaction cleared_status and recalculate cleared balances

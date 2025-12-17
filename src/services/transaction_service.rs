@@ -1074,4 +1074,187 @@ impl TransactionService {
             .fetch_all(&self.db)
             .await
     }
+
+    /// Update the cleared status of a transaction and recalculate cleared balances
+    pub async fn update_cleared_status(&self, id: Uuid, new_status: ClearedStatus) -> Result<Option<Transaction>, sqlx::Error> {
+        // First, get the current transaction to understand its current state
+        let original_transaction = self.get_transaction(id).await?;
+
+        if let Some(original) = original_transaction {
+            // Start a database transaction
+            let mut tx = self.db.begin().await?;
+            let now = chrono::Utc::now();
+
+            // Update the transaction's cleared status
+            let updated_transaction = sqlx::query_as::<_, Transaction>(
+                r#"
+                UPDATE transactions 
+                SET cleared_status = $1, updated_at = $2
+                WHERE id = $3
+                RETURNING *
+                "#,
+            )
+            .bind(&new_status)
+            .bind(now)
+            .bind(id)
+            .fetch_optional(&mut *tx)
+            .await?;
+
+            if let Some(transaction) = &updated_transaction {
+                // Calculate the cleared balance changes needed
+                let abs_amount = transaction.amount.abs();
+                
+                // Determine the balance changes based on the old and new cleared status
+                let old_affects_cleared = matches!(original.cleared_status, ClearedStatus::Cleared | ClearedStatus::Reconciled);
+                let new_affects_cleared = matches!(new_status, ClearedStatus::Cleared | ClearedStatus::Reconciled);
+
+                // Only update cleared balances if the cleared status effect changes
+                if old_affects_cleared != new_affects_cleared {
+                    if new_affects_cleared {
+                        // Transaction is now cleared/reconciled - apply cleared balance effects
+                        if transaction.amount >= 0.0 {
+                            // Positive amount: source cleared balance decreases, destination cleared balance increases
+                            sqlx::query(
+                                r#"
+                                UPDATE accounts
+                                SET cleared_balance = cleared_balance - $1, updated_at = $2
+                                WHERE id = $3
+                                "#,
+                            )
+                            .bind(abs_amount)
+                            .bind(now)
+                            .bind(transaction.source_account_id)
+                            .execute(&mut *tx)
+                            .await?;
+
+                            sqlx::query(
+                                r#"
+                                UPDATE accounts
+                                SET cleared_balance = cleared_balance + $1, updated_at = $2
+                                WHERE id = $3
+                                "#,
+                            )
+                            .bind(abs_amount)
+                            .bind(now)
+                            .bind(transaction.destination_account_id)
+                            .execute(&mut *tx)
+                            .await?;
+                        } else {
+                            // Negative amount: source cleared balance increases, destination cleared balance decreases
+                            sqlx::query(
+                                r#"
+                                UPDATE accounts
+                                SET cleared_balance = cleared_balance + $1, updated_at = $2
+                                WHERE id = $3
+                                "#,
+                            )
+                            .bind(abs_amount)
+                            .bind(now)
+                            .bind(transaction.source_account_id)
+                            .execute(&mut *tx)
+                            .await?;
+
+                            sqlx::query(
+                                r#"
+                                UPDATE accounts
+                                SET cleared_balance = cleared_balance - $1, updated_at = $2
+                                WHERE id = $3
+                                "#,
+                            )
+                            .bind(abs_amount)
+                            .bind(now)
+                            .bind(transaction.destination_account_id)
+                            .execute(&mut *tx)
+                            .await?;
+                        }
+                    } else {
+                        // Transaction is now uncleared - reverse cleared balance effects
+                        if transaction.amount >= 0.0 {
+                            // Positive amount: reverse the cleared balance effects
+                            sqlx::query(
+                                r#"
+                                UPDATE accounts
+                                SET cleared_balance = cleared_balance + $1, updated_at = $2
+                                WHERE id = $3
+                                "#,
+                            )
+                            .bind(abs_amount)
+                            .bind(now)
+                            .bind(transaction.source_account_id)
+                            .execute(&mut *tx)
+                            .await?;
+
+                            sqlx::query(
+                                r#"
+                                UPDATE accounts
+                                SET cleared_balance = cleared_balance - $1, updated_at = $2
+                                WHERE id = $3
+                                "#,
+                            )
+                            .bind(abs_amount)
+                            .bind(now)
+                            .bind(transaction.destination_account_id)
+                            .execute(&mut *tx)
+                            .await?;
+                        } else {
+                            // Negative amount: reverse the cleared balance effects
+                            sqlx::query(
+                                r#"
+                                UPDATE accounts
+                                SET cleared_balance = cleared_balance - $1, updated_at = $2
+                                WHERE id = $3
+                                "#,
+                            )
+                            .bind(abs_amount)
+                            .bind(now)
+                            .bind(transaction.source_account_id)
+                            .execute(&mut *tx)
+                            .await?;
+
+                            sqlx::query(
+                                r#"
+                                UPDATE accounts
+                                SET cleared_balance = cleared_balance + $1, updated_at = $2
+                                WHERE id = $3
+                                "#,
+                            )
+                            .bind(abs_amount)
+                            .bind(now)
+                            .bind(transaction.destination_account_id)
+                            .execute(&mut *tx)
+                            .await?;
+                        }
+                    }
+                }
+            }
+
+            // Commit the transaction
+            tx.commit().await?;
+
+            Ok(updated_transaction)
+        } else {
+            Ok(None)
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_cleared_status_enum() {
+        // Test that ClearedStatus enum values work correctly
+        let uncleared = ClearedStatus::Uncleared;
+        let cleared = ClearedStatus::Cleared;
+        let reconciled = ClearedStatus::Reconciled;
+
+        // Test default value
+        assert!(matches!(ClearedStatus::default(), ClearedStatus::Uncleared));
+
+        // Test that we can create all variants
+        assert!(matches!(uncleared, ClearedStatus::Uncleared));
+        assert!(matches!(cleared, ClearedStatus::Cleared));
+        assert!(matches!(reconciled, ClearedStatus::Reconciled));
+    }
 }

@@ -3,7 +3,7 @@ use axum::{
     http::StatusCode,
     Json,
     Router,
-    routing::{get, post, put, delete},
+    routing::{get, post, put, delete, patch},
 };
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -22,6 +22,7 @@ pub fn router(transaction_service: Arc<TransactionRuleService>) -> Router {
         .route("/transactions/{id}", get(get_transaction))
         .route("/transactions/{id}", put(update_transaction))
         .route("/transactions/{id}", delete(delete_transaction))
+        .route("/transactions/{id}/cleared-status", patch(update_cleared_status))
         .route("/accounts/{source_account_id}/transactions", get(get_account_transactions))
         .route("/accounts/{source_account_id}/import-csv", post(import_csv_transactions))
         .with_state(transaction_service)
@@ -41,6 +42,11 @@ pub struct TransactionQuery {
 struct MonthlyIncomingQuery {
     year: i32,
     month: u32,
+}
+
+#[derive(Debug, Deserialize)]
+struct UpdateClearedStatusRequest {
+    status: ClearedStatus,
 }
 
 // Handler to get all transactions, with optional filtering and pagination
@@ -225,6 +231,23 @@ async fn delete_transaction(
         Err(err) => {
             eprintln!("Error deleting transaction: {:?}", err);
             StatusCode::INTERNAL_SERVER_ERROR
+        }
+    }
+}
+
+// Handler to update the cleared status of a transaction
+async fn update_cleared_status(
+    Path(id): Path<Uuid>,
+    State(state): State<Arc<TransactionRuleService>>,
+    Json(payload): Json<UpdateClearedStatusRequest>,
+) -> Result<Json<Transaction>, StatusCode> {
+    // Call the transaction service to update the cleared status
+    match state.update_cleared_status(id, payload.status).await {
+        Ok(Some(transaction)) => Ok(Json(transaction)),
+        Ok(None) => Err(StatusCode::NOT_FOUND),
+        Err(err) => {
+            eprintln!("Error updating transaction cleared status: {:?}", err);
+            Err(StatusCode::INTERNAL_SERVER_ERROR)
         }
     }
 }

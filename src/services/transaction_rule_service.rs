@@ -117,4 +117,9 @@ impl TransactionRuleService {
     ) -> Result<Vec<Transaction>, sqlx::Error> {
         self.transaction_service.get_unbudgeted_transactions(start_date, end_date).await
     }
+
+    /// Update the cleared status of a transaction (pass-through to TransactionService)
+    pub async fn update_cleared_status(&self, id: Uuid, new_status: crate::models::ClearedStatus) -> Result<Option<Transaction>, sqlx::Error> {
+        self.transaction_service.update_cleared_status(id, new_status).await
+    }
 }
