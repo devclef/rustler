@@ -236,3 +236,20 @@ export interface LedgerResponse {
   current_balance: number;
   cleared_balance: number;
 }
+
+// Payee autocomplete types
+export interface AccountSuggestion {
+  id: string;
+  name: string;
+  account_type: string;
+}
+
+export interface PayeeAutocompleteResponse {
+  accounts: AccountSuggestion[];
+  external_payees: string[];
+}
+
+export interface LastCategoryResponse {
+  category_id: string | null;
+  category_name: string | null;
+}

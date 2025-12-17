@@ -25,7 +25,10 @@ import type {
   RuleGroup,
   ClearedStatus,
   LedgerTransaction,
-  LedgerResponse
+  LedgerResponse,
+  PayeeAutocompleteResponse,
+  LastCategoryResponse,
+  AccountSuggestion
 } from './types.ts';
 
 // Re-export types for convenience
@@ -51,7 +54,10 @@ export type {
   RuleTestResponse,
   ClearedStatus,
   LedgerTransaction,
-  LedgerResponse
+  LedgerResponse,
+  PayeeAutocompleteResponse,
+  LastCategoryResponse,
+  AccountSuggestion
 };
 
 // Reports API
@@ -929,6 +935,32 @@ export const settingsApi = {
     });
     if (!response.ok) {
       throw new Error('Failed to update forecasted monthly income');
+    }
+    return response.json();
+  },
+};
+
+// API functions for payees
+export const payeesApi = {
+  // Get payee autocomplete suggestions
+  getAutocomplete: async (query?: string): Promise<PayeeAutocompleteResponse> => {
+    const params = new URLSearchParams();
+    if (query) params.set('query', query);
+    // Add cache-busting parameter
+    params.set('_t', Date.now().toString());
+
+    const response = await fetch(`${API_BASE_URL}/payees/autocomplete?${params.toString()}`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch payee autocomplete suggestions');
+    }
+    return response.json();
+  },
+
+  // Get the last category used with a specific payee
+  getLastCategory: async (payeeName: string): Promise<LastCategoryResponse> => {
+    const response = await fetch(`${API_BASE_URL}/payees/${encodeURIComponent(payeeName)}/last-category`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch last category for payee: ${payeeName}`);
     }
     return response.json();
   },

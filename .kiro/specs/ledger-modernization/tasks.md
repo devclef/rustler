@@ -134,15 +134,15 @@
     - **Property 18: Transaction deletion recalculates subsequent balances**
     - **Validates: Requirements 5.1, 5.2, 5.3, 5.4**
 
-- [ ] 11. Create PayeeAutocomplete component
-  - [ ] 11.1 Build autocomplete dropdown component
+- [x] 11. Create PayeeAutocomplete component
+  - [x] 11.1 Build autocomplete dropdown component
     - Fetch suggestions from `/api/payees/autocomplete` as user types
     - Display accounts with account type indicator
     - Display external payees with distinct styling
     - Handle selection and call onChange callback
     - _Requirements: 3.5, 6.1_
 
-  - [ ] 11.2 Implement category auto-fill on payee selection
+  - [x] 11.2 Implement category auto-fill on payee selection
     - When payee is selected, fetch last category from API
     - Auto-fill category field if previous category exists
     - _Requirements: 6.2_
@@ -152,7 +152,7 @@
     - **Property 19: Payee selection auto-fills category**
     - **Validates: Requirements 3.5, 6.2**
 
-- [ ] 12. Create CategoryAutocomplete component
+- [-] 12. Create CategoryAutocomplete component
   - Build autocomplete dropdown for categories
   - Fetch categories from existing categories API
   - Filter categories based on user input

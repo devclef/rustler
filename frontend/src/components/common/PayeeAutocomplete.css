@@ -1,0 +1,100 @@
+.payee-autocomplete-container {
+  position: relative;
+  width: 100%;
+}
+
+.payee-autocomplete-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+.payee-autocomplete-input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.payee-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  max-height: 200px;
+  overflow-y: auto;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 0 0 4px 4px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+}
+
+.payee-suggestion-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.payee-suggestion-item:hover {
+  background-color: #f5f5f5;
+}
+
+.payee-suggestion-item.selected {
+  background-color: #e0f0ff;
+  border-left: 3px solid #007bff;
+}
+
+.payee-suggestion-item.loading,
+.payee-suggestion-item.error {
+  color: #666;
+  font-style: italic;
+  cursor: default;
+}
+
+.payee-suggestion-item.error {
+  color: #dc3545;
+}
+
+.payee-name {
+  flex: 1;
+}
+
+.account-type-indicator {
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background-color: #e9ecef;
+  color: #495057;
+  margin-left: 8px;
+}
+
+.external-payee-indicator {
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background-color: #d4edda;
+  color: #155724;
+  margin-left: 8px;
+}
+
+.payee-suggestions-section {
+  border-bottom: 1px solid #e9ecef;
+}
+
+.payee-suggestions-section:last-child {
+  border-bottom: none;
+}
+
+.payee-suggestions-header {
+  padding: 6px 12px;
+  background-color: #f8f9fa;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
