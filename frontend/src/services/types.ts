@@ -211,3 +211,28 @@ export interface InflowOutflowReportRow {
   inflow: number;
   outflow: number;
 }
+
+// Cleared status enum for transactions
+export type ClearedStatus = 'uncleared' | 'cleared' | 'reconciled';
+
+// Ledger transaction interface with computed fields for ledger view
+export interface LedgerTransaction {
+  id: string;
+  date: string; // ISO date string from backend
+  payee: string; // Computed from source/destination based on perspective
+  category: string;
+  cleared_status: ClearedStatus;
+  outflow: number | null; // Shown when money leaves account
+  inflow: number | null; // Shown when money enters account
+  memo: string;
+  is_transfer: boolean;
+  running_balance?: number; // Computed on frontend, not from API
+}
+
+// Response from the ledger API endpoint
+export interface LedgerResponse {
+  transactions: LedgerTransaction[];
+  total_count: number;
+  current_balance: number;
+  cleared_balance: number;
+}

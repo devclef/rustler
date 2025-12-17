@@ -22,7 +22,10 @@ import type {
   InflowOutflowReportRow,
   Features,
   RuleTestResponse,
-  RuleGroup
+  RuleGroup,
+  ClearedStatus,
+  LedgerTransaction,
+  LedgerResponse
 } from './types.ts';
 
 // Re-export types for convenience
@@ -45,7 +48,10 @@ export type {
   ForecastedMonthlyIncomeResponse,
   SpendingReportRow,
   InflowOutflowReportRow,
-  RuleTestResponse
+  RuleTestResponse,
+  ClearedStatus,
+  LedgerTransaction,
+  LedgerResponse
 };
 
 // Reports API
@@ -169,6 +175,29 @@ export const accountsApi = {
     if (!response.ok) {
       throw new Error(`Failed to delete account with ID ${id}`);
     }
+  },
+
+  // Get account ledger with pagination and search
+  getLedger: async (
+    id: string,
+    params?: {
+      page?: number;
+      limit?: number;
+      search?: string;
+    }
+  ): Promise<LedgerResponse> => {
+    const query = new URLSearchParams();
+    if (params?.page) query.set('page', params.page.toString());
+    if (params?.limit) query.set('limit', params.limit.toString());
+    if (params?.search) query.set('search', params.search);
+    // Add cache-busting parameter
+    query.set('_t', Date.now().toString());
+
+    const response = await fetch(`${API_BASE_URL}/accounts/${id}/ledger?${query.toString()}`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch ledger for account with ID ${id}`);
+    }
+    return response.json();
   },
 };
 

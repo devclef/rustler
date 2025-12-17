@@ -109,10 +109,10 @@
   - **Property 47: Bulk update applies all changes**
   - **Validates: Requirements 13.2, 13.3, 13.4**
 
-- [ ] 8. Checkpoint - Ensure all backend tests pass
+- [x] 8. Checkpoint - Ensure all backend tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 9. Create LedgerTransaction TypeScript interface
+- [x] 9. Create LedgerTransaction TypeScript interface
   - Define LedgerTransaction interface with computed fields
   - Add types for ClearedStatus enum
   - Add types for ledger API responses
