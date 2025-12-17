@@ -16,6 +16,8 @@ pub struct Account {
     pub account_sub_type: Option<String>,
     /// Current balance of the account
     pub balance: f64,
+    /// Cleared balance of the account (balance of cleared and reconciled transactions)
+    pub cleared_balance: f64,
     /// Currency of the account (e.g., "USD", "EUR")
     pub currency: String,
     /// Whether this is the default account
@@ -33,6 +35,8 @@ pub struct CreateAccountRequest {
     pub account_type: String,
     pub account_sub_type: Option<String>,
     pub balance: f64,
+    #[serde(default)]
+    pub cleared_balance: f64,
     pub currency: String,
     #[serde(default)]
     pub is_default: bool,
@@ -45,6 +49,7 @@ pub struct UpdateAccountRequest {
     pub account_type: Option<String>,
     pub account_sub_type: Option<String>,
     pub balance: Option<f64>,
+    pub cleared_balance: Option<f64>,
     pub currency: Option<String>,
     pub is_default: Option<bool>,
 }

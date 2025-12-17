@@ -84,6 +84,7 @@ impl RuleService {
                 category: None,
                 budget_id: None,
                 transaction_date: None,
+                cleared_status: None,
             };
 
             // Deserialize conditions and actions
@@ -267,6 +268,7 @@ impl RuleService {
                 category: None,
                 budget_id: None,
                 transaction_date: None,
+                cleared_status: None,
             };
 
             let mut any_rule_applied = false;
@@ -622,6 +624,7 @@ impl RuleService {
             category: None,
             budget_id: None,
             transaction_date: None,
+            cleared_status: None,
         };
 
         let mut any_rule_applied = false;

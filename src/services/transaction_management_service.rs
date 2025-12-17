@@ -1,3 +1,5 @@
+use crate::models::ClearedStatus;
+
 pub async fn create_transaction(&self, req: CreateTransactionRequest) -> Result<Transaction, sqlx::Error> {
     let now = chrono::Utc::now();
     let transaction_date = req.transaction_date.unwrap_or(now);
@@ -26,8 +28,8 @@ pub async fn create_transaction(&self, req: CreateTransactionRequest) -> Result<
             let new_account_id = Uuid::new_v4();
             sqlx::query(
                 r#"
-                INSERT INTO accounts (id, name, account_type, balance, currency, created_at, updated_at)
-                VALUES ($1, $2, 'External', 0.00, 'USD', $3, $4)
+                INSERT INTO accounts (id, name, account_type, balance, cleared_balance, currency, created_at, updated_at)
+                VALUES ($1, $2, 'External', 0.00, 0.00, 'USD', $3, $4)
                 "#,
             )
             .bind(new_account_id)
@@ -42,8 +44,8 @@ pub async fn create_transaction(&self, req: CreateTransactionRequest) -> Result<
     // Create the transaction
     let transaction = sqlx::query_as::<_, Transaction>(
         r#"
-        INSERT INTO transactions (id, account_id, source_account_id, destination_account_id, description, amount, category, budget_id, transaction_date, created_at, updated_at)
-        VALUES ($1, $2, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        INSERT INTO transactions (id, account_id, source_account_id, destination_account_id, description, amount, category, budget_id, transaction_date, cleared_status, created_at, updated_at)
+        VALUES ($1, $2, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
         RETURNING *
         "#,
     )
@@ -55,6 +57,7 @@ pub async fn create_transaction(&self, req: CreateTransactionRequest) -> Result<
     .bind(&req.category)
     .bind(req.budget_id)
     .bind(transaction_date)
+    .bind(ClearedStatus::Uncleared)
     .bind(now)
     .bind(now)
     .fetch_one(&mut *tx)

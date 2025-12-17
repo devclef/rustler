@@ -142,6 +142,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Run migration to add account_sub_type field and split account types
     db::add_account_sub_type(&db_pool).await?;
 
+    // Run migration to add cleared_status tracking
+    db::add_cleared_status(&db_pool).await?;
+
     // Check database connection
     db::check_db_connection(&db_pool).await?;
 

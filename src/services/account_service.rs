@@ -1,7 +1,7 @@
 use sqlx::{Pool, Postgres};
 use uuid::Uuid;
 
-use crate::models::{Account, CreateAccountRequest, UpdateAccountRequest};
+use crate::models::{Account, CreateAccountRequest, UpdateAccountRequest, ClearedStatus};
 
 /// Service for handling account-related operations
 pub struct AccountService {
@@ -47,8 +47,8 @@ impl AccountService {
         // Create the account including is_default
         let account = sqlx::query_as::<_, Account>(
             r#"
-            INSERT INTO accounts (id, name, account_type, account_sub_type, balance, currency, is_default, created_at, updated_at)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            INSERT INTO accounts (id, name, account_type, account_sub_type, balance, cleared_balance, currency, is_default, created_at, updated_at)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
             RETURNING *
             "#,
         )
@@ -57,6 +57,7 @@ impl AccountService {
         .bind(&req.account_type)
         .bind(&req.account_sub_type)
         .bind(req.balance)
+        .bind(req.cleared_balance)
         .bind(&req.currency)
         .bind(req.is_default)
         .bind(now)
@@ -70,12 +71,13 @@ impl AccountService {
             let external_account_id = Uuid::new_v4();
             sqlx::query(
                 r#"
-                INSERT INTO accounts (id, name, account_type, account_sub_type, balance, currency, created_at, updated_at)
-                VALUES ($1, $2, 'External', NULL, $3, $4, $5, $6)
+                INSERT INTO accounts (id, name, account_type, account_sub_type, balance, cleared_balance, currency, created_at, updated_at)
+                VALUES ($1, $2, 'External', NULL, $3, $4, $5, $6, $7)
                 "#,
             )
             .bind(external_account_id)
             .bind("Initial Balance")
+            .bind(0.0)
             .bind(0.0)
             .bind(&req.currency)
             .bind(now)
@@ -95,8 +97,8 @@ impl AccountService {
             // Create the transaction
             sqlx::query(
                 r#"
-                INSERT INTO transactions (id, account_id, source_account_id, destination_account_id, destination_name, description, amount, category, transaction_date, created_at, updated_at)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+                INSERT INTO transactions (id, account_id, source_account_id, destination_account_id, destination_name, description, amount, category, transaction_date, cleared_status, created_at, updated_at)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
                 "#,
             )
             .bind(Uuid::new_v4())
@@ -108,6 +110,7 @@ impl AccountService {
             .bind(amount)
             .bind("Initial Balance")
             .bind(now)
+            .bind(ClearedStatus::Uncleared)
             .bind(now)
             .bind(now)
             .execute(&mut *tx)
@@ -159,6 +162,10 @@ impl AccountService {
 
         if let Some(balance) = req.balance {
             params.push(format!("balance = {}", balance));
+        }
+
+        if let Some(cleared_balance) = req.cleared_balance {
+            params.push(format!("cleared_balance = {}", cleared_balance));
         }
 
         if let Some(currency) = &req.currency {

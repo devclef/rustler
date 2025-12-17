@@ -10,7 +10,7 @@ use uuid::Uuid;
 use std::sync::Arc;
 use chrono::Utc;
 
-use crate::models::{Transaction, CreateTransactionRequest, UpdateTransactionRequest};
+use crate::models::{Transaction, CreateTransactionRequest, UpdateTransactionRequest, ClearedStatus};
 use crate::services::TransactionRuleService;
 
 pub fn router(transaction_service: Arc<TransactionRuleService>) -> Router {
@@ -355,6 +355,7 @@ async fn import_csv_transactions(
             category,
             budget_id,
             transaction_date,
+            cleared_status: ClearedStatus::Uncleared,
         };
 
         // Create the transaction

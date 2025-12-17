@@ -3,6 +3,21 @@ use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use uuid::Uuid;
 
+/// Cleared status for a transaction
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::Type)]
+#[sqlx(type_name = "cleared_status", rename_all = "lowercase")]
+pub enum ClearedStatus {
+    Uncleared,
+    Cleared,
+    Reconciled,
+}
+
+impl Default for ClearedStatus {
+    fn default() -> Self {
+        ClearedStatus::Uncleared
+    }
+}
+
 /// Represents a financial transaction in the system
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct Transaction {
@@ -26,6 +41,8 @@ pub struct Transaction {
     pub budget_id: Option<Uuid>,
     /// Date and time when the transaction occurred
     pub transaction_date: DateTime<Utc>,
+    /// Cleared status of the transaction (uncleared, cleared, or reconciled)
+    pub cleared_status: ClearedStatus,
     /// When the transaction record was created
     pub created_at: DateTime<Utc>,
     /// When the transaction record was last updated
@@ -48,6 +65,9 @@ pub struct CreateTransactionRequest {
     /// Optional budget ID this transaction is assigned to
     pub budget_id: Option<Uuid>,
     pub transaction_date: Option<DateTime<Utc>>,
+    /// Cleared status of the transaction (defaults to uncleared if not provided)
+    #[serde(default)]
+    pub cleared_status: ClearedStatus,
 }
 
 /// Data required to update an existing transaction
@@ -64,4 +84,6 @@ pub struct UpdateTransactionRequest {
     /// Optional budget ID this transaction is assigned to
     pub budget_id: Option<Uuid>,
     pub transaction_date: Option<DateTime<Utc>>,
+    /// Cleared status of the transaction
+    pub cleared_status: Option<ClearedStatus>,
 }
