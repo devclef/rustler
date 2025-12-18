@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { FixedSizeList as List } from 'react-window';
+import * as ReactWindow from 'react-window';
+const List = ReactWindow.FixedSizeList;
 import type { LedgerTransaction, Account, Category, ClearedStatus } from '../../services/types';
 import { accountsApi, categoriesApi, transactionsApi } from '../../services/api';
 import { enhancedApi } from '../../services/enhancedApi';

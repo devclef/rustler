@@ -374,7 +374,7 @@
   - Migrate any remaining functionality to new components
   - _Requirements: All_
 
-- [-] 24. Final checkpoint - Ensure all tests pass
+- [ ] 24. Final checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 25. Integration testing and bug fixes
