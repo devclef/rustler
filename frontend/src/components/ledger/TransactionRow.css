@@ -1,0 +1,358 @@
+/* TransactionRow Component Styles */
+
+.transaction-row {
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.transaction-row:hover {
+  background-color: var(--color-bg-secondary, #f8f9fa);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+.transaction-row.selected {
+  background-color: var(--color-primary-light, #e3f2fd);
+}
+
+/* Cleared status styling */
+.transaction-row.uncleared {
+  color: var(--color-text-secondary, #666);
+  opacity: 0.75;
+}
+
+.transaction-row.cleared {
+  color: var(--color-text-primary, #333);
+}
+
+.transaction-row.reconciled {
+  background-color: var(--color-bg-tertiary, #f0f0f0);
+  color: var(--color-text-primary, #333);
+  border-left: 3px solid var(--color-warning, #ffc107);
+}
+
+.transaction-row.future {
+  font-style: italic;
+  color: var(--color-text-muted, #999);
+  background-color: var(--color-future-bg, #f8f9fa);
+  border-left: 3px solid var(--color-info, #17a2b8);
+  position: relative;
+}
+
+.transaction-row.future::before {
+  content: "⏰";
+  position: absolute;
+  left: -15px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  color: var(--color-info, #17a2b8);
+}
+
+/* Transfer row styling */
+.transaction-row.transfer {
+  border-left: 4px solid var(--color-primary, #007bff);
+  background-color: var(--color-transfer-row-bg, #f8fbff);
+  position: relative;
+}
+
+.transaction-row.transfer:hover {
+  background-color: var(--color-transfer-row-hover, #f0f8ff);
+  box-shadow: 0 2px 6px rgba(0, 123, 255, 0.2);
+}
+
+.transaction-row.transfer::after {
+  content: "↔";
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-primary, #007bff);
+  font-weight: bold;
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+/* Cell styling */
+.transaction-row td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--color-border, #e0e0e0);
+  vertical-align: middle;
+}
+
+.transaction-row td.clickable {
+  cursor: pointer;
+  position: relative;
+}
+
+.transaction-row td.clickable:hover {
+  background-color: var(--color-bg-hover, #f5f5f5);
+}
+
+.transaction-row td.editing {
+  background-color: var(--color-bg-editing, #fff3cd);
+  cursor: default;
+}
+
+/* Cleared status column */
+.cleared-status {
+  text-align: center;
+  font-size: 16px;
+  width: 40px;
+  user-select: none;
+  font-weight: bold;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.cleared-status:hover {
+  background-color: var(--color-bg-hover, #f5f5f5);
+  transform: scale(1.1);
+}
+
+/* Enhanced cleared status indicators */
+.transaction-row.cleared .cleared-status {
+  color: var(--color-success, #28a745);
+  background-color: var(--color-success-light, #d4edda);
+}
+
+.transaction-row.reconciled .cleared-status {
+  color: var(--color-warning-dark, #856404);
+  background-color: var(--color-warning-light, #fff3cd);
+}
+
+.transaction-row.uncleared .cleared-status {
+  color: var(--color-text-muted, #999);
+}
+
+/* Date column */
+.date {
+  width: 120px;
+  white-space: nowrap;
+}
+
+.date input {
+  width: 100%;
+  border: 1px solid var(--color-border, #ccc);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 14px;
+}
+
+/* Payee column */
+.payee {
+  min-width: 200px;
+  max-width: 300px;
+}
+
+.payee.transfer {
+  font-weight: 500;
+  background-color: var(--color-transfer-bg, #e8f4fd);
+  border-left: 3px solid var(--color-primary, #007bff);
+}
+
+.transfer-indicator {
+  margin-right: 6px;
+  color: var(--color-primary, #007bff);
+  font-weight: bold;
+  font-size: 14px;
+  display: inline-block;
+  padding: 2px 4px;
+  background-color: var(--color-primary-light, #e3f2fd);
+  border-radius: 3px;
+  border: 1px solid var(--color-primary, #007bff);
+}
+
+/* Category column */
+.category {
+  min-width: 150px;
+  max-width: 200px;
+}
+
+/* Amount columns */
+.amount {
+  text-align: right;
+  width: 100px;
+  font-family: 'Courier New', monospace;
+  font-weight: 500;
+}
+
+.amount.outflow {
+  color: var(--color-danger, #dc3545);
+}
+
+.amount.inflow {
+  color: var(--color-success, #28a745);
+}
+
+.amount.running-balance {
+  font-weight: bold;
+  border-left: 2px solid var(--color-border, #e0e0e0);
+}
+
+.amount input {
+  width: 100%;
+  text-align: right;
+  border: 1px solid var(--color-border, #ccc);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 14px;
+  font-family: 'Courier New', monospace;
+}
+
+/* Memo column */
+.memo {
+  min-width: 150px;
+  max-width: 250px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.memo input {
+  width: 100%;
+  border: 1px solid var(--color-border, #ccc);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 14px;
+}
+
+/* Actions column */
+.actions {
+  width: 80px;
+  text-align: center;
+}
+
+.actions .button {
+  padding: 4px 8px;
+  font-size: 12px;
+  border-radius: 4px;
+  border: 1px solid var(--color-border, #ccc);
+  background: var(--color-bg-primary, #fff);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.actions .button:hover {
+  background: var(--color-bg-secondary, #f8f9fa);
+}
+
+.actions .button.danger {
+  color: var(--color-danger, #dc3545);
+  border-color: var(--color-danger, #dc3545);
+}
+
+.actions .button.danger:hover {
+  background: var(--color-danger, #dc3545);
+  color: white;
+}
+
+.actions .button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Error display */
+.error-row {
+  background-color: var(--color-danger-light, #f8d7da);
+  color: var(--color-danger-dark, #721c24);
+  padding: 8px 12px;
+  border: none;
+}
+
+.error-message {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Edit field styling */
+.edit-field {
+  position: relative;
+}
+
+.edit-field input,
+.edit-field select {
+  width: 100%;
+  border: 2px solid var(--color-primary, #007bff);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 14px;
+  background: white;
+}
+
+.edit-field input:focus,
+.edit-field select:focus {
+  outline: none;
+  border-color: var(--color-primary-dark, #0056b3);
+  box-shadow: 0 0 0 2px var(--color-primary-light, #e3f2fd);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .transaction-row td {
+    padding: 6px 8px;
+    font-size: 14px;
+  }
+  
+  .memo {
+    max-width: 120px;
+  }
+  
+  .payee {
+    max-width: 150px;
+  }
+  
+  .category {
+    max-width: 120px;
+  }
+}
+
+/* Accessibility */
+.transaction-row:focus-within {
+  outline: 2px solid var(--color-primary, #007bff);
+  outline-offset: -2px;
+}
+
+/* Visual feedback for saving state */
+.transaction-row.saving {
+  opacity: 0.7;
+  pointer-events: none;
+  position: relative;
+}
+
+.transaction-row.saving::after {
+  content: '⏳';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(255, 255, 255, 0.9);
+  padding: 8px 12px;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  font-size: 16px;
+  z-index: 10;
+}
+
+/* Enhanced selection styling */
+.transaction-row.selected {
+  background-color: var(--color-primary-light, #e3f2fd);
+  border-left: 4px solid var(--color-primary, #007bff);
+  box-shadow: inset 0 0 0 1px var(--color-primary, #007bff);
+}
+
+/* Combine state classes for better visual hierarchy */
+.transaction-row.selected.uncleared {
+  background-color: var(--color-primary-light, #e3f2fd);
+  opacity: 0.9;
+}
+
+.transaction-row.selected.future {
+  background-color: var(--color-info-light, #d1ecf1);
+  border-left-color: var(--color-info, #17a2b8);
+}
+
+.transaction-row.selected.reconciled {
+  background-color: var(--color-warning-light, #fff3cd);
+  border-left-color: var(--color-warning, #ffc107);
+}

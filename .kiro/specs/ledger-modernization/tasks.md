@@ -152,7 +152,7 @@
     - **Property 19: Payee selection auto-fills category**
     - **Validates: Requirements 3.5, 6.2**
 
-- [-] 12. Create CategoryAutocomplete component
+- [x] 12. Create CategoryAutocomplete component
   - Build autocomplete dropdown for categories
   - Fetch categories from existing categories API
   - Filter categories based on user input
@@ -164,8 +164,8 @@
   - **Property 22: New category is created automatically**
   - **Validates: Requirements 6.3, 6.5**
 
-- [ ] 13. Create TransactionRow component with inline editing
-  - [ ] 13.1 Build editable transaction row
+- [x] 13. Create TransactionRow component with inline editing
+  - [x] 13.1 Build editable transaction row
     - Display transaction fields as editable cells
     - Implement click-to-edit for all fields
     - Show cleared status indicator with click-to-cycle
@@ -174,7 +174,7 @@
     - Display running balance
     - _Requirements: 1.1, 1.4, 3.1, 4.1, 4.2, 4.3, 7.1, 7.2, 8.1, 9.1, 9.2, 9.3, 9.4_
 
-  - [ ] 13.2 Implement keyboard navigation
+  - [x] 13.2 Implement keyboard navigation
     - Handle Tab/Enter to move to next field
     - Handle Escape to cancel edit
     - Implement field focus order: date → payee → category → outflow → inflow
@@ -185,7 +185,7 @@
     - **Property 2: Escape key restores original value**
     - **Validates: Requirements 1.2, 1.3**
 
-  - [ ] 13.4 Implement immediate save on edit completion
+  - [x] 13.4 Implement immediate save on edit completion
     - Save field changes immediately when focus leaves field
     - Show visual feedback (brief highlight) on successful save
     - Handle save errors gracefully
@@ -195,7 +195,7 @@
     - **Property 4: Field edits save immediately**
     - **Validates: Requirements 1.5**
 
-  - [ ] 13.6 Implement reconciled transaction restrictions
+  - [x] 13.6 Implement reconciled transaction restrictions
     - Disable amount and date editing for reconciled transactions
     - Show tooltip explaining why fields are disabled
     - _Requirements: 8.4_
@@ -204,15 +204,15 @@
     - **Property 31: Reconciled transactions prevent amount/date edits**
     - **Validates: Requirements 8.4**
 
-- [ ] 14. Create NewTransactionRow component
-  - [ ] 14.1 Build new transaction input row
+- [x] 14. Create NewTransactionRow component
+  - [x] 14.1 Build new transaction input row
     - Display empty row at top of ledger table
     - Include all transaction fields (date, payee, category, outflow, inflow)
     - Use PayeeAutocomplete and CategoryAutocomplete components
     - Default date to today
     - _Requirements: 2.1, 2.5_
 
-  - [ ] 14.2 Implement transaction creation on Enter
+  - [x] 14.2 Implement transaction creation on Enter
     - Validate required fields before submission
     - Create transaction via API
     - Clear row after successful creation
@@ -225,7 +225,7 @@
     - **Property 7: Transactions inserted in chronological order**
     - **Validates: Requirements 2.2, 2.3, 2.4**
 
-  - [ ] 14.3 Implement inflow/outflow logic
+  - [x] 14.3 Implement inflow/outflow logic
     - When outflow is entered, create transaction with current account as source
     - When inflow is entered, create transaction with current account as destination
     - Prevent entering both inflow and outflow simultaneously
@@ -236,8 +236,8 @@
     - **Property 14: Inflow entry creates transaction with current account as destination**
     - **Validates: Requirements 4.4, 4.5**
 
-- [ ] 15. Create LedgerTable component
-  - [ ] 15.1 Build main ledger container
+- [x] 15. Create LedgerTable component
+  - [x] 15.1 Build main ledger container
     - Display account name and balances in header
     - Show current balance and cleared balance
     - Render NewTransactionRow at top
@@ -245,7 +245,7 @@
     - Implement virtual scrolling for performance
     - _Requirements: 5.5, 8.5, 10.1, 10.2_
 
-  - [ ] 15.2 Implement search and filter UI
+  - [x] 15.2 Implement search and filter UI
     - Add search input box
     - Add date range filter inputs
     - Add category filter dropdown
@@ -260,20 +260,20 @@
     - **Property 40: Cleared status filter shows only matching transactions**
     - **Validates: Requirements 11.1, 11.2, 11.3, 11.4**
 
-  - [ ] 15.4 Implement transaction selection
+  - [x] 15.4 Implement transaction selection
     - Add checkbox column for selecting transactions
     - Track selected transaction IDs in state
     - Add "select all" checkbox in header
     - _Requirements: 13.1_
 
-  - [ ] 15.5 Implement running balance updates
+  - [x] 15.5 Implement running balance updates
     - Recalculate running balances when transactions change
     - Update running balances when filters change
     - Ensure running balances are always accurate
     - _Requirements: 5.1, 5.2, 5.3, 5.4_
 
-- [ ] 16. Create BulkEditToolbar component
-  - [ ] 16.1 Build bulk edit toolbar
+- [x] 16. Create BulkEditToolbar component
+  - [x] 16.1 Build bulk edit toolbar
     - Show toolbar when transactions are selected
     - Display count of selected transactions
     - Add category bulk edit dropdown
@@ -281,7 +281,7 @@
     - Add "Apply" and "Cancel" buttons
     - _Requirements: 13.1, 13.5_
 
-  - [ ] 16.2 Implement bulk update operations
+  - [x] 16.2 Implement bulk update operations
     - Call bulk update API with selected IDs and changes
     - Show loading state during update
     - Show success/error feedback
@@ -293,7 +293,7 @@
     - **Property 46: Bulk cleared status update applies to all selected**
     - **Validates: Requirements 13.2, 13.3**
 
-- [ ] 17. Implement keyboard shortcuts
+- [x] 17. Implement keyboard shortcuts
   - Add global keyboard event listener
   - Implement Ctrl/Cmd+N to focus new transaction row
   - Implement Ctrl/Cmd+F to focus search box
@@ -302,8 +302,8 @@
   - Implement Escape to clear selection
   - _Requirements: 14.1, 14.2, 14.3, 14.4, 14.5_
 
-- [ ] 18. Implement transfer detection and display
-  - [ ] 18.1 Add transfer indicator to TransactionRow
+- [x] 18. Implement transfer detection and display
+  - [x] 18.1 Add transfer indicator to TransactionRow
     - Check if transaction has `isTransfer: true`
     - Display transfer icon/label in payee field
     - Style transfer rows distinctly
@@ -314,7 +314,7 @@
     - **Property 24: Transfer has visual indicator**
     - **Validates: Requirements 7.1, 7.2**
 
-  - [ ] 18.3 Implement transfer synchronization
+  - [x] 18.3 Implement transfer synchronization
     - When editing a transfer, update both sides
     - When deleting a transfer, delete both sides
     - Show warning when editing transfers
@@ -326,7 +326,7 @@
     - **Property 27: Transfer deletion removes both sides**
     - **Validates: Requirements 7.3, 7.4, 7.5**
 
-- [ ] 19. Add visual styling for transaction states
+- [x] 19. Add visual styling for transaction states
   - Style uncleared transactions with lighter text
   - Add checkmark icon for cleared transactions
   - Add lock icon for reconciled transactions
@@ -341,7 +341,7 @@
   - **Property 35: Future transactions have pending style**
   - **Validates: Requirements 9.1, 9.2, 9.3, 9.4**
 
-- [ ] 20. Implement mobile responsive layout
+- [x] 20. Implement mobile responsive layout
   - Create card-based layout for mobile viewports
   - Implement expandable transaction cards
   - Add swipe gestures for quick actions
@@ -349,7 +349,7 @@
   - Test on various mobile screen sizes
   - _Requirements: 15.1, 15.2, 15.3, 15.4, 15.5_
 
-- [ ] 21. Optimize performance with virtual scrolling
+- [x] 21. Optimize performance with virtual scrolling
   - Implement react-window or similar library for virtual scrolling
   - Render only visible transaction rows
   - Implement dynamic loading on scroll
@@ -360,14 +360,14 @@
   - **Property 36: Scroll loads additional transactions**
   - **Validates: Requirements 10.2**
 
-- [ ] 22. Add loading states and error handling
+- [x] 22. Add loading states and error handling
   - Show loading spinner during API calls
   - Display error messages for failed operations
   - Implement retry logic for failed requests
   - Add optimistic UI updates for better perceived performance
   - _Requirements: 10.3_
 
-- [ ] 23. Update existing AccountLedger component
+- [-] 23. Update existing AccountLedger component
   - Replace old AccountLedger with new LedgerTable component
   - Remove old form-based transaction entry
   - Remove old separate withdrawal/deposit columns

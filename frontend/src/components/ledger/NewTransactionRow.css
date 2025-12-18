@@ -1,0 +1,141 @@
+/* NewTransactionRow Component Styles */
+
+.new-transaction-row {
+  background-color: var(--color-bg-new, #f8fff8);
+  border-top: 2px solid var(--color-primary, #007bff);
+}
+
+.new-transaction-row.saving {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.new-transaction-row td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--color-border, #e0e0e0);
+  vertical-align: middle;
+}
+
+/* New indicator */
+.new-indicator {
+  color: var(--color-success, #28a745);
+  font-weight: bold;
+  font-size: 16px;
+}
+
+/* Input styling for new transaction row */
+.new-transaction-input {
+  width: 100%;
+  border: 1px solid var(--color-border-light, #ddd);
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-size: 14px;
+  background: white;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.new-transaction-input:focus {
+  outline: none;
+  border-color: var(--color-primary, #007bff);
+  box-shadow: 0 0 0 2px var(--color-primary-light, #e3f2fd);
+}
+
+.new-transaction-input:disabled {
+  background-color: var(--color-bg-disabled, #f5f5f5);
+  color: var(--color-text-disabled, #999);
+  cursor: not-allowed;
+}
+
+.new-transaction-input::placeholder {
+  color: var(--color-text-placeholder, #999);
+  font-style: italic;
+}
+
+/* Amount inputs */
+.new-transaction-row .amount input {
+  text-align: right;
+  font-family: 'Courier New', monospace;
+}
+
+/* Actions button */
+.new-transaction-row .actions .button {
+  padding: 6px 12px;
+  font-size: 13px;
+  border-radius: 4px;
+  border: 1px solid var(--color-primary, #007bff);
+  background: var(--color-primary, #007bff);
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.new-transaction-row .actions .button:hover:not(:disabled) {
+  background: var(--color-primary-dark, #0056b3);
+  border-color: var(--color-primary-dark, #0056b3);
+}
+
+.new-transaction-row .actions .button:disabled {
+  background: var(--color-bg-disabled, #f5f5f5);
+  border-color: var(--color-border, #ccc);
+  color: var(--color-text-disabled, #999);
+  cursor: not-allowed;
+}
+
+/* Error display */
+.new-transaction-row .error-row {
+  background-color: var(--color-danger-light, #f8d7da);
+  color: var(--color-danger-dark, #721c24);
+  padding: 8px 12px;
+  border: none;
+}
+
+.new-transaction-row .error-message {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .new-transaction-row td {
+    padding: 6px 8px;
+  }
+  
+  .new-transaction-input {
+    padding: 4px 6px;
+    font-size: 13px;
+  }
+  
+  .new-transaction-row .actions .button {
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+}
+
+/* Focus indicators */
+.new-transaction-row:focus-within {
+  background-color: var(--color-bg-focus, #f0f8ff);
+}
+
+/* Validation states */
+.new-transaction-row .new-transaction-input.invalid {
+  border-color: var(--color-danger, #dc3545);
+  box-shadow: 0 0 0 2px var(--color-danger-light, #f8d7da);
+}
+
+.new-transaction-row .new-transaction-input.valid {
+  border-color: var(--color-success, #28a745);
+}
+
+/* Animation for successful creation */
+@keyframes transaction-created {
+  0% {
+    background-color: var(--color-success-light, #d4edda);
+  }
+  100% {
+    background-color: var(--color-bg-new, #f8fff8);
+  }
+}
+
+.new-transaction-row.created {
+  animation: transaction-created 0.5s ease-out;
+}

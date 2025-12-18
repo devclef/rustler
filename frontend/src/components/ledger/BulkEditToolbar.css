@@ -1,0 +1,219 @@
+/* BulkEditToolbar Component Styles */
+
+.bulk-edit-toolbar {
+  background: var(--color-bg-secondary, #f8f9fa);
+  border: 1px solid var(--color-border, #e0e0e0);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.bulk-edit-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.bulk-edit-header h3 {
+  margin: 0;
+  color: var(--color-text-primary, #333);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: var(--color-text-secondary, #666);
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.close-button:hover:not(:disabled) {
+  background-color: var(--color-bg-hover, #f5f5f5);
+  color: var(--color-text-primary, #333);
+}
+
+.close-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.bulk-edit-error {
+  background-color: var(--color-danger-light, #f8d7da);
+  color: var(--color-danger-dark, #721c24);
+  padding: 8px 12px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  border: 1px solid var(--color-danger, #dc3545);
+}
+
+.bulk-edit-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: end;
+}
+
+.bulk-edit-field {
+  display: flex;
+  flex-direction: column;
+  min-width: 200px;
+  flex: 1;
+}
+
+.bulk-edit-field label {
+  font-weight: 500;
+  margin-bottom: 4px;
+  color: var(--color-text-primary, #333);
+  font-size: 14px;
+}
+
+.bulk-edit-input {
+  padding: 8px 12px;
+  border: 1px solid var(--color-border, #ccc);
+  border-radius: 4px;
+  font-size: 14px;
+  background: white;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.bulk-edit-input:focus {
+  outline: none;
+  border-color: var(--color-primary, #007bff);
+  box-shadow: 0 0 0 2px var(--color-primary-light, #e3f2fd);
+}
+
+.bulk-edit-input:disabled {
+  background-color: var(--color-bg-disabled, #f5f5f5);
+  color: var(--color-text-disabled, #999);
+  cursor: not-allowed;
+}
+
+.bulk-edit-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.bulk-edit-actions .button {
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid;
+  white-space: nowrap;
+}
+
+.bulk-edit-actions .button.primary {
+  background: var(--color-primary, #007bff);
+  border-color: var(--color-primary, #007bff);
+  color: white;
+}
+
+.bulk-edit-actions .button.primary:hover:not(:disabled) {
+  background: var(--color-primary-dark, #0056b3);
+  border-color: var(--color-primary-dark, #0056b3);
+}
+
+.bulk-edit-actions .button.secondary {
+  background: var(--color-bg-primary, #fff);
+  border-color: var(--color-border, #ccc);
+  color: var(--color-text-primary, #333);
+}
+
+.bulk-edit-actions .button.secondary:hover:not(:disabled) {
+  background: var(--color-bg-secondary, #f8f9fa);
+  border-color: var(--color-border-dark, #999);
+}
+
+.bulk-edit-actions .button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .bulk-edit-toolbar {
+    padding: 12px;
+  }
+  
+  .bulk-edit-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .bulk-edit-field {
+    min-width: auto;
+  }
+  
+  .bulk-edit-actions {
+    justify-content: stretch;
+  }
+  
+  .bulk-edit-actions .button {
+    flex: 1;
+  }
+  
+  .bulk-edit-header h3 {
+    font-size: 14px;
+  }
+}
+
+/* Animation for showing/hiding */
+.bulk-edit-toolbar {
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+/* Enhanced loading states */
+.bulk-edit-actions .button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bulk-edit-actions .loading-spinner-container {
+  margin: 0;
+}
+
+.bulk-edit-error {
+  background-color: var(--error-bg, #f8d7da);
+  color: var(--error-text, #721c24);
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 14px;
+  margin-bottom: 12px;
+  border: 1px solid var(--error-border, #f5c6cb);
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .bulk-edit-error {
+    background-color: var(--error-bg-dark, #2d1b1f);
+    color: var(--error-text-dark, #f5c6cb);
+    border-color: var(--error-border-dark, #842029);
+  }
+}

@@ -1,0 +1,210 @@
+.error-display {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid #dc3545;
+  background-color: #f8d7da;
+  color: #721c24;
+  position: relative;
+}
+
+.error-display.banner {
+  padding: 16px;
+  border-radius: 0;
+  border-left: none;
+  border-right: none;
+  margin: 0 -16px;
+}
+
+.error-display.modal {
+  max-width: 400px;
+  background-color: white;
+  border: 1px solid #dc3545;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+}
+
+.error-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.error-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.error-title {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.error-message {
+  font-size: 14px;
+  line-height: 1.4;
+  margin-bottom: 8px;
+}
+
+.error-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.error-retry-btn,
+.error-dismiss-btn {
+  padding: 4px 12px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.error-retry-btn {
+  background-color: #dc3545;
+  color: white;
+  border-color: #dc3545;
+}
+
+.error-retry-btn:hover {
+  background-color: #c82333;
+  border-color: #bd2130;
+}
+
+.error-dismiss-btn {
+  background-color: transparent;
+  color: #721c24;
+  border-color: #721c24;
+}
+
+.error-dismiss-btn:hover {
+  background-color: #721c24;
+  color: white;
+}
+
+.error-close-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #721c24;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.error-close-btn:hover {
+  opacity: 1;
+}
+
+.error-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+/* Success variant */
+.error-display.success {
+  border-color: #28a745;
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.error-display.success .error-retry-btn {
+  background-color: #28a745;
+  border-color: #28a745;
+}
+
+.error-display.success .error-retry-btn:hover {
+  background-color: #218838;
+  border-color: #1e7e34;
+}
+
+.error-display.success .error-dismiss-btn {
+  color: #155724;
+  border-color: #155724;
+}
+
+.error-display.success .error-dismiss-btn:hover {
+  background-color: #155724;
+  color: white;
+}
+
+.error-display.success .error-close-btn {
+  color: #155724;
+}
+
+/* Warning variant */
+.error-display.warning {
+  border-color: #ffc107;
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.error-display.warning .error-retry-btn {
+  background-color: #ffc107;
+  border-color: #ffc107;
+  color: #212529;
+}
+
+.error-display.warning .error-retry-btn:hover {
+  background-color: #e0a800;
+  border-color: #d39e00;
+}
+
+.error-display.warning .error-dismiss-btn {
+  color: #856404;
+  border-color: #856404;
+}
+
+.error-display.warning .error-dismiss-btn:hover {
+  background-color: #856404;
+  color: white;
+}
+
+.error-display.warning .error-close-btn {
+  color: #856404;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .error-display {
+    background-color: #2d1b1f;
+    color: #f5c6cb;
+    border-color: #842029;
+  }
+  
+  .error-display.modal {
+    background-color: #1a1a1a;
+  }
+  
+  .error-display.success {
+    background-color: #0f2419;
+    color: #75b798;
+    border-color: #0a3622;
+  }
+  
+  .error-display.warning {
+    background-color: #2b2515;
+    color: #ffda6a;
+    border-color: #664d03;
+  }
+}

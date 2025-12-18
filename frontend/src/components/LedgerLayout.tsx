@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import AccountSidebar from './accounts/AccountSidebar';
-import AccountLedger from './transactions/AccountLedger';
+import LedgerTable from './ledger/LedgerTable';
 
 // Key for storing the selected account ID in localStorage
 const SELECTED_ACCOUNT_KEY = 'rustler_selected_account_id';
@@ -15,8 +15,7 @@ const LedgerLayout = () => {
     return storedAccountId || null;
   });
 
-  // State to trigger a refresh of the AccountLedger component
-  const [refreshKey, setRefreshKey] = useState(0);
+  // Note: LedgerTable handles its own refresh logic internally
 
   // Update refreshKey when location state indicates a refresh is needed
   useEffect(() => {

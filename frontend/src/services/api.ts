@@ -323,6 +323,36 @@ export const transactionsApi = {
     }
   },
 
+  // Update cleared status of a transaction
+  updateClearedStatus: async (id: string, status: ClearedStatus): Promise<Transaction> => {
+    const response = await fetch(`${API_BASE_URL}/transactions/${id}/cleared-status`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ status }),
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to update cleared status for transaction with ID ${id}`);
+    }
+    return response.json();
+  },
+
+  // Bulk update multiple transactions
+  bulkUpdate: async (transactionIds: string[], updates: Partial<Transaction>): Promise<{ updated: number; failed: string[] }> => {
+    const response = await fetch(`${API_BASE_URL}/transactions/bulk-update`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ transactionIds, updates }),
+    });
+    if (!response.ok) {
+      throw new Error('Failed to bulk update transactions');
+    }
+    return response.json();
+  },
+
   // Import transactions from CSV
   importTransactions: async (importData: {
     account_id: string;
