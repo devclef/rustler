@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import * as ReactWindow from 'react-window';
-const List = ReactWindow.FixedSizeList;
+const VirtualList = ReactWindow.FixedSizeList;
 import type { LedgerTransaction, Account, Category, ClearedStatus } from '../../services/types';
 import { accountsApi, categoriesApi, transactionsApi } from '../../services/api';
 import { enhancedApi } from '../../services/enhancedApi';
@@ -79,7 +79,7 @@ const LedgerTable: React.FC<LedgerTableProps> = ({ accountId }) => {
   // Refs for keyboard shortcuts and virtual scrolling
   const searchInputRef = useRef<HTMLInputElement>(null);
   const newTransactionRowRef = useRef<NewTransactionRowRef>(null);
-  const virtualListRef = useRef<List>(null);
+  const virtualListRef = useRef<any>(null);
   
   // Virtual scrolling state
   const [isVirtualScrollEnabled, setIsVirtualScrollEnabled] = useState(false);
@@ -869,7 +869,7 @@ const LedgerTable: React.FC<LedgerTableProps> = ({ accountId }) => {
 
             {/* Virtual List */}
             {filteredTransactions.length > 0 ? (
-              <List
+              <VirtualList
                 ref={virtualListRef}
                 height={VIRTUAL_LIST_HEIGHT}
                 itemCount={filteredTransactions.length}
@@ -878,7 +878,7 @@ const LedgerTable: React.FC<LedgerTableProps> = ({ accountId }) => {
                 className="virtual-transaction-list"
               >
                 {VirtualizedRow}
-              </List>
+              </VirtualList>
             ) : (
               <div className="empty-state">
                 <div className="empty-state-content">

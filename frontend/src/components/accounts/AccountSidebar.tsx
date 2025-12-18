@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { accountsApi } from '../../services/api';
 import type { Account } from '../../services/types';
-import { ACCOUNT_TYPE } from '../../constants/accountTypes';
 
 interface AccountSidebarProps {
   selectedAccountId: string | null;
@@ -26,8 +25,8 @@ const AccountSidebar = ({ selectedAccountId, onSelectAccount }: AccountSidebarPr
         // Filter out external accounts, only show on-budget and off-budget accounts
         // Use startsWith to include accounts with subtypes
         const filteredAccounts = data.filter(account =>
-          account.account_type.startsWith(ACCOUNT_TYPE.ON_BUDGET) ||
-          account.account_type.startsWith(ACCOUNT_TYPE.OFF_BUDGET)
+          account.account_type.startsWith('On Budget') ||
+          account.account_type.startsWith('Off Budget')
         );
 
         console.log('AccountSidebar: Setting filtered accounts:', filteredAccounts);
@@ -63,8 +62,8 @@ const AccountSidebar = ({ selectedAccountId, onSelectAccount }: AccountSidebarPr
 
   // Group accounts by budget status
   // Use startsWith to include accounts with subtypes
-  const onBudgetAccounts = accounts.filter(account => account.account_type.startsWith(ACCOUNT_TYPE.ON_BUDGET));
-  const offBudgetAccounts = accounts.filter(account => account.account_type.startsWith(ACCOUNT_TYPE.OFF_BUDGET));
+  const onBudgetAccounts = accounts.filter(account => account.account_type.startsWith('On Budget'));
+  const offBudgetAccounts = accounts.filter(account => account.account_type.startsWith('Off Budget'));
 
   // Render account list item
   const renderAccountItem = (account: Account) => (
