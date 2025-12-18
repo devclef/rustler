@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { accountsApi } from '../../services/api';
-import type { Account } from '../../services/api';
+import type { Account } from '../../services/types';
 import { ACCOUNT_TYPE } from '../../constants/accountTypes';
 
 interface AccountSidebarProps {
@@ -75,7 +75,7 @@ const AccountSidebar = ({ selectedAccountId, onSelectAccount }: AccountSidebarPr
     >
       <div className="account-name">{account.name}</div>
       <div className={`account-balance ${account.balance >= 0 ? 'positive' : 'negative'}`}>
-        {account.balance.toFixed(2)}
+        {typeof account.balance === 'number' ? account.balance.toFixed(2) : '0.00'}
       </div>
     </li>
   );

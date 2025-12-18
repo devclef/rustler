@@ -29,7 +29,7 @@ import type {
   PayeeAutocompleteResponse,
   LastCategoryResponse,
   AccountSuggestion
-} from './types.ts';
+} from './types';
 
 // Re-export types for convenience
 export type {
