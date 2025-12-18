@@ -6,16 +6,15 @@ import { ACCOUNT_TYPE } from '../../constants/accountTypes';
 interface AccountSidebarProps {
   selectedAccountId: string | null;
   onSelectAccount: (accountId: string) => void;
-  refreshKey?: number;
 }
 
-const AccountSidebar = ({ selectedAccountId, onSelectAccount, refreshKey = 0 }: AccountSidebarProps) => {
+const AccountSidebar = ({ selectedAccountId, onSelectAccount }: AccountSidebarProps) => {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    console.log('AccountSidebar: useEffect triggered with refreshKey =', refreshKey);
+    console.log('AccountSidebar: useEffect triggered');
 
     const fetchAccounts = async () => {
       try {
@@ -43,7 +42,7 @@ const AccountSidebar = ({ selectedAccountId, onSelectAccount, refreshKey = 0 }: 
     };
 
     fetchAccounts();
-  }, [selectedAccountId, onSelectAccount, refreshKey]);
+  }, []);
 
   if (loading) {
     return <div className="account-sidebar-loading">Loading accounts...</div>;

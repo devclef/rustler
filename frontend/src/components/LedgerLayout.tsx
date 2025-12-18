@@ -17,20 +17,16 @@ const LedgerLayout = () => {
 
   // Note: LedgerTable handles its own refresh logic internally
 
-  // Update refreshKey when location state indicates a refresh is needed
+  // Handle refresh signals from navigation
   useEffect(() => {
     if (location.state && location.state.refresh) {
       console.log('LedgerLayout: Refresh signal received', location.state);
 
-      // Update refreshKey to trigger a re-render of AccountLedger
-      const newRefreshKey = refreshKey + 1;
-      console.log('LedgerLayout: Updating refreshKey from', refreshKey, 'to', newRefreshKey);
-      setRefreshKey(newRefreshKey);
-
       // Clear the location state to prevent refreshing on subsequent renders
+      // Note: LedgerTable handles its own refresh logic internally
       window.history.replaceState({}, document.title);
     }
-  }, [location.state, refreshKey]);
+  }, [location.state]);
 
   const handleSelectAccount = (accountId: string) => {
     // Update state
@@ -46,12 +42,11 @@ const LedgerLayout = () => {
         <AccountSidebar
           selectedAccountId={selectedAccountId}
           onSelectAccount={handleSelectAccount}
-          refreshKey={refreshKey}
         />
       </aside>
       <main className="ledger-content">
         {selectedAccountId ? (
-          <AccountLedger accountId={selectedAccountId} refreshKey={refreshKey} />
+          <LedgerTable accountId={selectedAccountId} />
         ) : (
           <div className="no-account-selected">
             <div className="empty-state">

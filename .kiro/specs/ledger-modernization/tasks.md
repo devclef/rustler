@@ -367,14 +367,14 @@
   - Add optimistic UI updates for better perceived performance
   - _Requirements: 10.3_
 
-- [-] 23. Update existing AccountLedger component
+- [x] 23. Update existing AccountLedger component
   - Replace old AccountLedger with new LedgerTable component
   - Remove old form-based transaction entry
   - Remove old separate withdrawal/deposit columns
   - Migrate any remaining functionality to new components
   - _Requirements: All_
 
-- [ ] 24. Final checkpoint - Ensure all tests pass
+- [-] 24. Final checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 25. Integration testing and bug fixes
