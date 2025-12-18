@@ -37,7 +37,7 @@ pub struct LastCategoryResponse {
 pub fn router(account_service: Arc<AccountService>, transaction_service: Arc<TransactionService>) -> Router {
     Router::new()
         .route("/payees/autocomplete", get(get_payee_autocomplete))
-        .route("/payees/:name/last-category", get(get_payee_last_category))
+        .route("/payees/{name}/last-category", get(get_payee_last_category))
         .with_state((account_service, transaction_service))
 }
 
